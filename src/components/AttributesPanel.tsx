@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from "react";
 import {
   Database,
   Hash,
@@ -10,10 +10,10 @@ import {
   ChevronDown,
   GripVertical,
   Binary,
-} from 'lucide-react';
-import type { DragItem, AttributeNode } from '../types';
-import { ATTRIBUTE_CATALOG } from '../types';
-import { useExpressionStore, generateCode } from '../store';
+} from "lucide-react";
+import type { DragItem, AttributeNode } from "../types";
+import { ATTRIBUTE_CATALOG } from "../types";
+import { useExpressionStore, generateCode } from "../store";
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -26,18 +26,28 @@ function nodeMatchesSearch(node: AttributeNode, search: string): boolean {
 
 // ─── Draggable wrapper ──────────────────────────────────────────
 
-function DraggableItem({ item, children }: { item: DragItem; children: React.ReactNode }) {
+function DraggableItem({
+  item,
+  children,
+}: {
+  item: DragItem;
+  children: React.ReactNode;
+}) {
   const handleDragStart = useCallback(
     (e: React.DragEvent) => {
-      e.dataTransfer.setData('application/json', JSON.stringify(item));
-      e.dataTransfer.effectAllowed = 'copy';
+      e.dataTransfer.setData("application/json", JSON.stringify(item));
+      e.dataTransfer.effectAllowed = "copy";
       const el = e.currentTarget as HTMLElement;
       e.dataTransfer.setDragImage(el, el.offsetWidth / 2, 20);
     },
-    [item],
+    [item]
   );
   return (
-    <div draggable onDragStart={handleDragStart} className="cursor-grab active:cursor-grabbing">
+    <div
+      draggable
+      onDragStart={handleDragStart}
+      className="cursor-grab active:cursor-grabbing"
+    >
       {children}
     </div>
   );
@@ -56,7 +66,7 @@ function AttributeTreeNode({
 }) {
   const [expanded, setExpanded] = useState(false);
   const hasChildren = (node.children ?? []).length > 0;
-  const item: DragItem = { type: 'ATTRIBUTE', name: node.value };
+  const item: DragItem = { type: "ATTRIBUTE", name: node.value };
 
   // When searching, auto-expand matching branches
   const isSearching = search.length > 0;
@@ -91,16 +101,22 @@ function AttributeTreeNode({
 
         {/* Draggable pill */}
         <DraggableItem item={item}>
-          <div className={`
+          <div
+            className={`
             flex items-center gap-1 px-2 py-1 rounded-md
             border text-xs font-medium
             hover:shadow-sm transition-all duration-150
-            ${labelMatches && isSearching
-              ? 'bg-blue-100 border-blue-300 text-blue-700'
-              : 'bg-blue-50 border-blue-200 text-blue-600 hover:border-blue-300'
+            ${
+              labelMatches && isSearching
+                ? "bg-blue-100 border-blue-300 text-blue-700"
+                : "bg-blue-50 border-blue-200 text-blue-600 hover:border-blue-300"
             }
-          `}>
-            <GripVertical size={9} className="text-blue-300 opacity-0 group-hover:opacity-100 shrink-0" />
+          `}
+          >
+            <GripVertical
+              size={9}
+              className="text-blue-300 opacity-0 group-hover:opacity-100 shrink-0"
+            />
             <Hash size={9} className="text-blue-400 shrink-0" />
             <span className="truncate">{node.label}</span>
             {hasChildren && (
@@ -113,7 +129,10 @@ function AttributeTreeNode({
 
         {/* Full path tooltip on hover (only for nested) */}
         {depth > 0 && (
-          <span className="text-[8px] text-slate-300 ml-1 opacity-0 group-hover:opacity-100 truncate max-w-[80px] transition-opacity" title={node.value}>
+          <span
+            className="text-[8px] text-slate-300 ml-1 opacity-0 group-hover:opacity-100 truncate max-w-[80px] transition-opacity"
+            title={node.value}
+          >
             {node.value}
           </span>
         )}
@@ -139,42 +158,52 @@ function AttributeTreeNode({
 // ─── Custom Value Input ─────────────────────────────────────────
 
 /** Keywords that should not be auto-quoted */
-const KEYWORD_VALUES = new Set(['TRUE', 'FALSE', 'NULL']);
+const KEYWORD_VALUES = new Set(["TRUE", "FALSE", "NULL"]);
 
 /** Detect value type: number, text, or keyword */
-function detectValueType(raw: string): 'number' | 'text' | 'keyword' {
-  if (KEYWORD_VALUES.has(raw.toUpperCase())) return 'keyword';
-  if (raw !== '' && !isNaN(Number(raw))) return 'number';
-  return 'text';
+function detectValueType(raw: string): "number" | "text" | "keyword" {
+  if (KEYWORD_VALUES.has(raw.toUpperCase())) return "keyword";
+  if (raw !== "" && !isNaN(Number(raw))) return "number";
+  return "text";
 }
 
 /** Resolve the literal value for codegen — auto-wraps text in quotes */
 function resolveLiteralValue(raw: string): string {
   const type = detectValueType(raw);
-  if (type === 'number') return raw;
-  if (type === 'keyword') return raw.toUpperCase();
+  if (type === "number") return raw;
+  if (type === "keyword") return raw.toUpperCase();
   // Text: wrap in quotes unless user already added them
-  if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
+  if (
+    (raw.startsWith('"') && raw.endsWith('"')) ||
+    (raw.startsWith("'") && raw.endsWith("'"))
+  ) {
     return raw;
   }
   return `"${raw}"`;
 }
 
 function CustomValueInput() {
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
 
   const trimmed = inputValue.trim();
   const valueType = trimmed ? detectValueType(trimmed) : null;
-  const resolvedValue = trimmed ? resolveLiteralValue(trimmed) : '';
+  const resolvedValue = trimmed ? resolveLiteralValue(trimmed) : "";
 
   const handleDragStart = useCallback(
     (e: React.DragEvent) => {
-      if (!resolvedValue) { e.preventDefault(); return; }
-      const item: DragItem = { type: 'LITERAL', name: 'Literal', value: resolvedValue };
-      e.dataTransfer.setData('application/json', JSON.stringify(item));
-      e.dataTransfer.effectAllowed = 'copy';
+      if (!resolvedValue) {
+        e.preventDefault();
+        return;
+      }
+      const item: DragItem = {
+        type: "LITERAL",
+        name: "Literal",
+        value: resolvedValue,
+      };
+      e.dataTransfer.setData("application/json", JSON.stringify(item));
+      e.dataTransfer.effectAllowed = "copy";
     },
-    [resolvedValue],
+    [resolvedValue]
   );
 
   return (
@@ -183,7 +212,7 @@ function CustomValueInput() {
         type="text"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        placeholder='e.g. hello or 42'
+        placeholder="e.g. hello or 42"
         className="
           w-full px-2.5 py-1.5 rounded-md
           border border-slate-200 bg-white
@@ -203,44 +232,72 @@ function CustomValueInput() {
               text-xs font-mono
               cursor-grab active:cursor-grabbing
               hover:shadow-sm transition-all duration-150
-              ${valueType === 'number'
-                ? 'bg-amber-50 border border-amber-300 text-amber-700 hover:bg-amber-100'
-                : 'bg-green-50 border border-green-300 text-green-700 hover:bg-green-100'
+              ${
+                valueType === "number"
+                  ? "bg-amber-50 border border-amber-300 text-amber-700 hover:bg-amber-100"
+                  : "bg-green-50 border border-green-300 text-green-700 hover:bg-green-100"
               }
             `}
           >
-            {valueType === 'number'
-              ? <Binary size={10} className="text-amber-400" />
-              : <Type size={10} className="text-green-400" />
-            }
+            {valueType === "number" ? (
+              <Binary size={10} className="text-amber-400" />
+            ) : (
+              <Type size={10} className="text-green-400" />
+            )}
             <span>{resolvedValue}</span>
-            <span className={`text-[9px] ml-1 ${valueType === 'number' ? 'text-amber-400' : 'text-green-400'}`}>drag me</span>
+            <span
+              className={`text-[9px] ml-1 ${
+                valueType === "number" ? "text-amber-400" : "text-green-400"
+              }`}
+            >
+              drag me
+            </span>
           </div>
-          <span className={`
+          <span
+            className={`
             text-[9px] font-semibold px-1.5 py-0.5 rounded
-            ${valueType === 'number'
-              ? 'bg-amber-100 text-amber-600'
-              : valueType === 'keyword'
-                ? 'bg-violet-100 text-violet-600'
-                : 'bg-green-100 text-green-600'
+            ${
+              valueType === "number"
+                ? "bg-amber-100 text-amber-600"
+                : valueType === "keyword"
+                ? "bg-violet-100 text-violet-600"
+                : "bg-green-100 text-green-600"
             }
-          `}>
-            {valueType === 'number' ? 'Number' : valueType === 'keyword' ? 'Keyword' : 'Text'}
+          `}
+          >
+            {valueType === "number"
+              ? "Number"
+              : valueType === "keyword"
+              ? "Keyword"
+              : "Text"}
           </span>
         </div>
       )}
       {/* Presets */}
       <div className="flex flex-wrap gap-1">
-        {([['""', '""'], ['" "', 'SPACE'], ['0', '0'], ['1', '1'], ['TRUE', 'TRUE'], ['FALSE', 'FALSE'], ['NULL', 'NULL']] as [string, string][]).map(([value, label]) => {
-          const item: DragItem = { type: 'LITERAL', name: 'Literal', value };
+        {(
+          [
+            ['""', '""'],
+            ['" "', "SPACE"],
+            ["0", "0"],
+            ["1", "1"],
+            ["TRUE", "TRUE"],
+            ["FALSE", "FALSE"],
+            ["NULL", "NULL"],
+          ] as [string, string][]
+        ).map(([value, label]) => {
+          const item: DragItem = { type: "LITERAL", name: "Literal", value };
           return (
             <DraggableItem key={value} item={item}>
-              <div className="
+              <div
+                className="
                 px-1.5 py-0.5 rounded text-[10px] font-mono
                 bg-slate-100 border border-slate-200 text-slate-500
                 hover:border-green-300 hover:text-green-600 hover:bg-green-50
                 transition-all duration-150
-              " title={`Value: ${value}`}>
+              "
+                title={`Value: ${value}`}
+              >
                 {label}
               </div>
             </DraggableItem>
@@ -256,7 +313,7 @@ function CustomValueInput() {
 export function AttributesPanel() {
   const root = useExpressionStore((s) => s.root);
   const expressionMode = useExpressionStore((s) => s.expressionMode);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const lowerSearch = search.toLowerCase().trim();
 
   return (
@@ -264,14 +321,19 @@ export function AttributesPanel() {
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-200 bg-gradient-to-r from-blue-500 to-cyan-500">
         <Database size={16} className="text-white" />
-        <h2 className="text-sm font-bold text-white tracking-tight">Data & Values</h2>
+        <h2 className="text-sm font-bold text-white tracking-tight">
+          Data & Values
+        </h2>
       </div>
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto sidebar-scroll p-3 space-y-4">
         {/* Search */}
         <div className="relative">
-          <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search
+            size={12}
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"
+          />
           <input
             type="text"
             value={search}
@@ -286,7 +348,9 @@ export function AttributesPanel() {
           <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
             <Database size={10} />
             <span>Attributes</span>
-            <span className="text-slate-300 ml-auto font-normal normal-case">{ATTRIBUTE_CATALOG.length}</span>
+            <span className="text-slate-300 ml-auto font-normal normal-case">
+              {ATTRIBUTE_CATALOG.length}
+            </span>
           </div>
           <div className="space-y-0.5">
             {ATTRIBUTE_CATALOG.map((node) => (
@@ -318,14 +382,17 @@ export function AttributesPanel() {
             Generated
           </span>
           <div className="flex-1" />
-          <span className={`
+          <span
+            className={`
             text-[9px] font-semibold px-1.5 py-0.5 rounded
-            ${expressionMode === 'validation'
-              ? 'bg-amber-100 text-amber-600'
-              : 'bg-indigo-100 text-indigo-600'
+            ${
+              expressionMode === "validation"
+                ? "bg-amber-100 text-amber-600"
+                : "bg-indigo-100 text-indigo-600"
             }
-          `}>
-            {expressionMode === 'validation' ? 'bool' : 'value'}
+          `}
+          >
+            {expressionMode === "validation" ? "bool" : "value"}
           </span>
         </div>
         <div className="px-3 pb-3">

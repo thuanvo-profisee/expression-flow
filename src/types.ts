@@ -718,6 +718,31 @@ export const ATTRIBUTE_CATALOG: AttributeNode[] = [
   },
 ];
 
+// ─── Flat attribute list (for search) ─────────────────────────────
+
+/** Flat list entry for attribute search */
+export interface FlatAttribute {
+  label: string;   // display label, e.g. "Name"
+  value: string;   // full path, e.g. "[Class].[Name]"
+  depth: number;   // nesting depth (0 = top-level)
+}
+
+/** Recursively flatten the attribute catalog into a searchable list */
+function flattenAttributes(nodes: AttributeNode[]): FlatAttribute[] {
+  const result: FlatAttribute[] = [];
+  function walk(list: AttributeNode[], depth: number) {
+    for (const node of list) {
+      result.push({ label: node.label, value: node.value, depth });
+      if (node.children) walk(node.children, depth + 1);
+    }
+  }
+  walk(nodes, 0);
+  return result;
+}
+
+/** Pre-computed flat list of all attributes for search */
+export const FLAT_ATTRIBUTES: FlatAttribute[] = flattenAttributes(ATTRIBUTE_CATALOG);
+
 // ─── Drag & Drop ──────────────────────────────────────────────────
 
 export interface DragItem {

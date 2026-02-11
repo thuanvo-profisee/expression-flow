@@ -185,6 +185,7 @@ interface ExpressionState {
   toggleCollapse: (blockId: string) => void;
   moveBlock: (fromId: string, toParentId: string, toSlotIndex: number) => void;
   updateBlockValue: (blockId: string, newValue: string) => void;
+  updateBlockName: (blockId: string, newName: string) => void;
   addArgSlot: (blockId: string) => void;
   removeArgSlot: (blockId: string, slotIndex: number) => void;
   setRoot: (root: Block | null) => void;
@@ -290,6 +291,17 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
       const newRoot = updateInTree(state.root, blockId, (b) => ({
         ...b,
         value: newValue,
+      }));
+      return { root: newRoot, generatedCode: generateCode(newRoot) };
+    });
+  },
+
+  updateBlockName: (blockId, newName) => {
+    set((state) => {
+      if (!state.root) return state;
+      const newRoot = updateInTree(state.root, blockId, (b) => ({
+        ...b,
+        name: newName,
       }));
       return { root: newRoot, generatedCode: generateCode(newRoot) };
     });
