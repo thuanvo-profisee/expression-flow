@@ -386,6 +386,92 @@ export const EXPRESSION_MODE_META: Record<ExpressionMode, {
   },
 };
 
+// ─── Attribute Tree ───────────────────────────────────────────────
+
+export interface AttributeNode {
+  name: string;            // e.g. "[Product]"
+  children?: AttributeNode[];
+}
+
+/** Hierarchical attribute catalog — each node can have child properties */
+export const ATTRIBUTE_CATALOG: AttributeNode[] = [
+  { name: '[Code]' },
+  {
+    name: '[Product]',
+    children: [
+      {
+        name: '[ProductSubcategory]',
+        children: [
+          {
+            name: '[ProductCategory]',
+            children: [
+              {
+                name: '[ProductGroup]',
+                children: [
+                  { name: '[Name]' },
+                  { name: '[Code]' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      { name: '[Name]' },
+      { name: '[Code]' },
+    ],
+  },
+  {
+    name: '[SnOPPostSiliconSupplyProduct]',
+    children: [
+      { name: '[MemberCd]' },
+      { name: '[Name]' },
+    ],
+  },
+  {
+    name: '[SiliconSnOPSupplyProduct]',
+    children: [
+      { name: '[MemberCd]' },
+      { name: '[Name]' },
+    ],
+  },
+  {
+    name: '[SnOPComputeArchGrp]',
+    children: [
+      { name: '[Name]' },
+      { name: '[Code]' },
+    ],
+  },
+  {
+    name: '[ForecastMktSegment]',
+    children: [
+      { name: '[Name]' },
+      { name: '[Code]' },
+    ],
+  },
+  {
+    name: '[MktSegment]',
+    children: [
+      { name: '[Name]' },
+      { name: '[Code]' },
+    ],
+  },
+  {
+    name: '[SnOPSupplyProduct]',
+    children: [
+      { name: '[MemberCd]' },
+      { name: '[Name]' },
+    ],
+  },
+  { name: '[MarketingCdNm]' },
+  { name: '[CreatedBy]' },
+  { name: '[ProductGroup]' },
+  { name: '[Region]' },
+  { name: '[SalesOrg]' },
+  { name: '[FiscalYear]' },
+  { name: '[Currency]' },
+  { name: '[UnitOfMeasure]' },
+];
+
 // ─── Drag & Drop ──────────────────────────────────────────────────
 
 export interface DragItem {

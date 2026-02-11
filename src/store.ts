@@ -117,14 +117,23 @@ export function generateCode(block: Block | null): string {
 
 // ─── Demo Data ───────────────────────────────────────────────────
 
-/** Validation demo: [ForecastMktSegment] = [MktSegment] */
+/** Validation demo: [Code] = CONCAT([SnOPPostSiliconSupplyProduct].[MemberCd], [SiliconSnOPSupplyProduct].[MemberCd]) */
 const DEMO_VALIDATION: Block = {
   id: 'root-v',
   type: 'FUNCTION',
   name: '=',
   args: [
-    { id: 'v-attr1', type: 'ATTRIBUTE', name: '[ForecastMktSegment]', args: [] },
-    { id: 'v-attr2', type: 'ATTRIBUTE', name: '[MktSegment]', args: [] },
+    { id: 'v-attr1', type: 'ATTRIBUTE', name: '[Code]', args: [] },
+    {
+      id: 'v-concat',
+      type: 'FUNCTION',
+      name: 'CONCAT',
+      args: [
+        { id: 'v-attr2', type: 'ATTRIBUTE', name: '[SnOPPostSiliconSupplyProduct].[MemberCd]', args: [] },
+        { id: 'v-attr3', type: 'ATTRIBUTE', name: '[SiliconSnOPSupplyProduct].[MemberCd]', args: [] },
+        null,
+      ],
+    },
   ],
 };
 

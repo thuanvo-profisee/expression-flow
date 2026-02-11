@@ -6,25 +6,21 @@ import {
   Type,
   Plus,
   Search,
+  ChevronRight,
+  ChevronDown,
+  GripVertical,
 } from 'lucide-react';
-import type { DragItem } from '../types';
+import type { DragItem, AttributeNode } from '../types';
+import { ATTRIBUTE_CATALOG } from '../types';
 import { useExpressionStore, generateCode } from '../store';
 
-// ─── Data Attributes Catalog ─────────────────────────────────────
-const DATA_ATTRIBUTES: string[] = [
-  '[SnOPComputeArchGrp]',
-  '[ForecastMktSegment]',
-  '[MktSegment]',
-  '[MarketingCdNm]',
-  '[CreatedBy]',
-  '[SnOPSupplyProduct]',
-  '[ProductGroup]',
-  '[Region]',
-  '[SalesOrg]',
-  '[FiscalYear]',
-  '[Currency]',
-  '[UnitOfMeasure]',
-];
+// ─── Helpers ────────────────────────────────────────────────────
+
+/** Check if a node or any descendant matches the search */
+function nodeMatchesSearch(node: AttributeNode, search: string): boolean {
+  if (node.name.toLowerCase().includes(search)) return true;
+  return (node.children ?? []).some((c) => nodeMatchesSearch(c, search));
+}
 
 // ─── Draggable wrapper ──────────────────────────────────────────
 
@@ -45,22 +41,100 @@ function DraggableItem({ item, children }: { item: DragItem; children: React.Rea
   );
 }
 
-// ─── Attribute Pill ─────────────────────────────────────────────
+// ─── Attribute Tree Node ────────────────────────────────────────
 
-function AttributeItem({ name }: { name: string }) {
-  const item: DragItem = { type: 'ATTRIBUTE', name };
+function AttributeTreeNode({
+  node,
+  parentPath,
+  depth,
+  search,
+}: {
+  node: AttributeNode;
+  parentPath: string;
+  depth: number;
+  search: string;
+}) {
+  const [expanded, setExpanded] = useState(depth === 0 && !!node.children);
+  const hasChildren = (node.children ?? []).length > 0;
+  const fullPath = parentPath ? `${parentPath}.${node.name}` : node.name;
+  const item: DragItem = { type: 'ATTRIBUTE', name: fullPath };
+
+  // When searching, auto-expand matching branches
+  const isSearching = search.length > 0;
+  const showExpanded = isSearching ? nodeMatchesSearch(node, search) : expanded;
+  const nameMatches = node.name.toLowerCase().includes(search);
+
+  // Hide nodes that don't match during search (and have no matching descendants)
+  if (isSearching && !nodeMatchesSearch(node, search)) return null;
+
   return (
-    <DraggableItem item={item}>
-      <div className="
-        flex items-center gap-1.5 px-2.5 py-1.5 rounded-full
-        border text-xs font-medium
-        hover:shadow-sm transition-all duration-150
-        bg-blue-50 border-blue-200 text-blue-600 hover:border-blue-300
-      ">
-        <Hash size={10} className="text-blue-400 shrink-0" />
-        <span className="truncate">{name}</span>
+    <div>
+      {/* This node */}
+      <div
+        className="flex items-center gap-0.5 group"
+        style={{ paddingLeft: `${depth * 16}px` }}
+      >
+        {/* Expand toggle */}
+        {hasChildren ? (
+          <button
+            onClick={() => setExpanded(!showExpanded)}
+            className="p-0.5 rounded hover:bg-slate-100 transition-colors shrink-0"
+          >
+            {showExpanded ? (
+              <ChevronDown size={12} className="text-slate-400" />
+            ) : (
+              <ChevronRight size={12} className="text-slate-400" />
+            )}
+          </button>
+        ) : (
+          <span className="w-[20px] shrink-0" />
+        )}
+
+        {/* Draggable pill */}
+        <DraggableItem item={item}>
+          <div className={`
+            flex items-center gap-1 px-2 py-1 rounded-md
+            border text-xs font-medium
+            hover:shadow-sm transition-all duration-150
+            ${nameMatches && isSearching
+              ? 'bg-blue-100 border-blue-300 text-blue-700'
+              : 'bg-blue-50 border-blue-200 text-blue-600 hover:border-blue-300'
+            }
+          `}>
+            <GripVertical size={9} className="text-blue-300 opacity-0 group-hover:opacity-100 shrink-0" />
+            <Hash size={9} className="text-blue-400 shrink-0" />
+            <span className="truncate">{node.name}</span>
+            {hasChildren && (
+              <span className="text-[8px] text-blue-300 ml-0.5 shrink-0">
+                +{node.children!.length}
+              </span>
+            )}
+          </div>
+        </DraggableItem>
+
+        {/* Full path tooltip on hover (only for nested) */}
+        {depth > 0 && (
+          <span className="text-[8px] text-slate-300 ml-1 opacity-0 group-hover:opacity-100 truncate max-w-[80px] transition-opacity" title={fullPath}>
+            {fullPath}
+          </span>
+        )}
       </div>
-    </DraggableItem>
+
+      {/* Children */}
+      {hasChildren && showExpanded && (
+        <div className="mt-0.5">
+          {node.children!.map((child) => (
+            <AttributeTreeNode
+              key={child.name}
+              node={child}
+              parentPath={fullPath}
+              depth={depth + 1}
+              search={search}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -144,10 +218,6 @@ export function AttributesPanel() {
   const [search, setSearch] = useState('');
   const lowerSearch = search.toLowerCase().trim();
 
-  const filtered = lowerSearch
-    ? DATA_ATTRIBUTES.filter((a) => a.toLowerCase().includes(lowerSearch))
-    : DATA_ATTRIBUTES;
-
   return (
     <div className="w-[260px] h-full flex flex-col bg-white border-l border-slate-200 shrink-0">
       {/* Header */}
@@ -170,20 +240,23 @@ export function AttributesPanel() {
           />
         </div>
 
-        {/* Data Attributes */}
+        {/* Data Attributes Tree */}
         <div>
           <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
             <Database size={10} />
             <span>Attributes</span>
-            <span className="text-slate-300 ml-auto font-normal normal-case">{filtered.length}</span>
+            <span className="text-slate-300 ml-auto font-normal normal-case">{ATTRIBUTE_CATALOG.length}</span>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {filtered.map((name) => (
-              <AttributeItem key={name} name={name} />
+          <div className="space-y-0.5">
+            {ATTRIBUTE_CATALOG.map((node) => (
+              <AttributeTreeNode
+                key={node.name}
+                node={node}
+                parentPath=""
+                depth={0}
+                search={lowerSearch}
+              />
             ))}
-            {filtered.length === 0 && (
-              <div className="text-xs text-slate-400 italic">No matches</div>
-            )}
           </div>
         </div>
 
