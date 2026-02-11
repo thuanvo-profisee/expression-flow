@@ -9,6 +9,7 @@ import {
   ChevronRight,
   ChevronDown,
   GripVertical,
+  Binary,
 } from 'lucide-react';
 import type { DragItem, AttributeNode } from '../types';
 import { ATTRIBUTE_CATALOG } from '../types';
@@ -18,7 +19,8 @@ import { useExpressionStore, generateCode } from '../store';
 
 /** Check if a node or any descendant matches the search */
 function nodeMatchesSearch(node: AttributeNode, search: string): boolean {
-  if (node.name.toLowerCase().includes(search)) return true;
+  if (node.label.toLowerCase().includes(search)) return true;
+  if (node.value.toLowerCase().includes(search)) return true;
   return (node.children ?? []).some((c) => nodeMatchesSearch(c, search));
 }
 
@@ -45,24 +47,21 @@ function DraggableItem({ item, children }: { item: DragItem; children: React.Rea
 
 function AttributeTreeNode({
   node,
-  parentPath,
   depth,
   search,
 }: {
   node: AttributeNode;
-  parentPath: string;
   depth: number;
   search: string;
 }) {
-  const [expanded, setExpanded] = useState(depth === 0 && !!node.children);
+  const [expanded, setExpanded] = useState(false);
   const hasChildren = (node.children ?? []).length > 0;
-  const fullPath = parentPath ? `${parentPath}.${node.name}` : node.name;
-  const item: DragItem = { type: 'ATTRIBUTE', name: fullPath };
+  const item: DragItem = { type: 'ATTRIBUTE', name: node.value };
 
   // When searching, auto-expand matching branches
   const isSearching = search.length > 0;
   const showExpanded = isSearching ? nodeMatchesSearch(node, search) : expanded;
-  const nameMatches = node.name.toLowerCase().includes(search);
+  const labelMatches = node.label.toLowerCase().includes(search);
 
   // Hide nodes that don't match during search (and have no matching descendants)
   if (isSearching && !nodeMatchesSearch(node, search)) return null;
@@ -96,14 +95,14 @@ function AttributeTreeNode({
             flex items-center gap-1 px-2 py-1 rounded-md
             border text-xs font-medium
             hover:shadow-sm transition-all duration-150
-            ${nameMatches && isSearching
+            ${labelMatches && isSearching
               ? 'bg-blue-100 border-blue-300 text-blue-700'
               : 'bg-blue-50 border-blue-200 text-blue-600 hover:border-blue-300'
             }
           `}>
             <GripVertical size={9} className="text-blue-300 opacity-0 group-hover:opacity-100 shrink-0" />
             <Hash size={9} className="text-blue-400 shrink-0" />
-            <span className="truncate">{node.name}</span>
+            <span className="truncate">{node.label}</span>
             {hasChildren && (
               <span className="text-[8px] text-blue-300 ml-0.5 shrink-0">
                 +{node.children!.length}
@@ -114,8 +113,8 @@ function AttributeTreeNode({
 
         {/* Full path tooltip on hover (only for nested) */}
         {depth > 0 && (
-          <span className="text-[8px] text-slate-300 ml-1 opacity-0 group-hover:opacity-100 truncate max-w-[80px] transition-opacity" title={fullPath}>
-            {fullPath}
+          <span className="text-[8px] text-slate-300 ml-1 opacity-0 group-hover:opacity-100 truncate max-w-[80px] transition-opacity" title={node.value}>
+            {node.value}
           </span>
         )}
       </div>
@@ -125,9 +124,8 @@ function AttributeTreeNode({
         <div className="mt-0.5">
           {node.children!.map((child) => (
             <AttributeTreeNode
-              key={child.name}
+              key={child.id}
               node={child}
-              parentPath={fullPath}
               depth={depth + 1}
               search={search}
             />
@@ -140,18 +138,43 @@ function AttributeTreeNode({
 
 // ─── Custom Value Input ─────────────────────────────────────────
 
+/** Keywords that should not be auto-quoted */
+const KEYWORD_VALUES = new Set(['TRUE', 'FALSE', 'NULL']);
+
+/** Detect value type: number, text, or keyword */
+function detectValueType(raw: string): 'number' | 'text' | 'keyword' {
+  if (KEYWORD_VALUES.has(raw.toUpperCase())) return 'keyword';
+  if (raw !== '' && !isNaN(Number(raw))) return 'number';
+  return 'text';
+}
+
+/** Resolve the literal value for codegen — auto-wraps text in quotes */
+function resolveLiteralValue(raw: string): string {
+  const type = detectValueType(raw);
+  if (type === 'number') return raw;
+  if (type === 'keyword') return raw.toUpperCase();
+  // Text: wrap in quotes unless user already added them
+  if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
+    return raw;
+  }
+  return `"${raw}"`;
+}
+
 function CustomValueInput() {
   const [inputValue, setInputValue] = useState('');
 
+  const trimmed = inputValue.trim();
+  const valueType = trimmed ? detectValueType(trimmed) : null;
+  const resolvedValue = trimmed ? resolveLiteralValue(trimmed) : '';
+
   const handleDragStart = useCallback(
     (e: React.DragEvent) => {
-      const val = inputValue.trim();
-      if (!val) { e.preventDefault(); return; }
-      const item: DragItem = { type: 'LITERAL', name: 'Literal', value: val };
+      if (!resolvedValue) { e.preventDefault(); return; }
+      const item: DragItem = { type: 'LITERAL', name: 'Literal', value: resolvedValue };
       e.dataTransfer.setData('application/json', JSON.stringify(item));
       e.dataTransfer.effectAllowed = 'copy';
     },
-    [inputValue],
+    [resolvedValue],
   );
 
   return (
@@ -160,7 +183,7 @@ function CustomValueInput() {
         type="text"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        placeholder='e.g. "hello" or 42'
+        placeholder='e.g. hello or 42'
         className="
           w-full px-2.5 py-1.5 rounded-md
           border border-slate-200 bg-white
@@ -169,23 +192,41 @@ function CustomValueInput() {
           focus:outline-none focus:ring-1 focus:ring-green-400 focus:border-green-400
         "
       />
-      {inputValue.trim() && (
-        <div
-          draggable
-          onDragStart={handleDragStart}
-          className="
-            inline-flex items-center gap-1.5
-            px-2.5 py-1.5 rounded-md
-            bg-green-50 border border-green-300
-            text-green-700 text-xs font-mono
-            cursor-grab active:cursor-grabbing
-            hover:bg-green-100 hover:shadow-sm
-            transition-all duration-150
-          "
-        >
-          <Type size={10} className="text-green-400" />
-          <span>{inputValue.trim()}</span>
-          <span className="text-[9px] text-green-400 ml-1">drag me</span>
+      {trimmed && (
+        <div className="flex items-center gap-2">
+          <div
+            draggable
+            onDragStart={handleDragStart}
+            className={`
+              inline-flex items-center gap-1.5
+              px-2.5 py-1.5 rounded-md
+              text-xs font-mono
+              cursor-grab active:cursor-grabbing
+              hover:shadow-sm transition-all duration-150
+              ${valueType === 'number'
+                ? 'bg-amber-50 border border-amber-300 text-amber-700 hover:bg-amber-100'
+                : 'bg-green-50 border border-green-300 text-green-700 hover:bg-green-100'
+              }
+            `}
+          >
+            {valueType === 'number'
+              ? <Binary size={10} className="text-amber-400" />
+              : <Type size={10} className="text-green-400" />
+            }
+            <span>{resolvedValue}</span>
+            <span className={`text-[9px] ml-1 ${valueType === 'number' ? 'text-amber-400' : 'text-green-400'}`}>drag me</span>
+          </div>
+          <span className={`
+            text-[9px] font-semibold px-1.5 py-0.5 rounded
+            ${valueType === 'number'
+              ? 'bg-amber-100 text-amber-600'
+              : valueType === 'keyword'
+                ? 'bg-violet-100 text-violet-600'
+                : 'bg-green-100 text-green-600'
+            }
+          `}>
+            {valueType === 'number' ? 'Number' : valueType === 'keyword' ? 'Keyword' : 'Text'}
+          </span>
         </div>
       )}
       {/* Presets */}
@@ -250,9 +291,8 @@ export function AttributesPanel() {
           <div className="space-y-0.5">
             {ATTRIBUTE_CATALOG.map((node) => (
               <AttributeTreeNode
-                key={node.name}
+                key={node.id}
                 node={node}
-                parentPath=""
                 depth={0}
                 search={lowerSearch}
               />

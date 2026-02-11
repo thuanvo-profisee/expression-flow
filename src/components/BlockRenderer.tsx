@@ -9,6 +9,9 @@ import {
   Type,
   Plus,
   Minus,
+  Binary,
+  ToggleLeft,
+  CircleOff,
 } from 'lucide-react';
 import type { Block } from '../types';
 import { FUNCTION_REGISTRY } from '../types';
@@ -88,6 +91,35 @@ function AttributePill({ block }: { block: Block }) {
   );
 }
 
+// ─── Literal type detection ──────────────────────────────────────
+
+type LiteralType = 'number' | 'boolean' | 'null' | 'text';
+
+function detectLiteralType(val: string): LiteralType {
+  const upper = val.toUpperCase();
+  if (upper === 'TRUE' || upper === 'FALSE') return 'boolean';
+  if (upper === 'NULL') return 'null';
+  if (val !== '' && !isNaN(Number(val))) return 'number';
+  return 'text';
+}
+
+const LITERAL_STYLES: Record<LiteralType, { pill: string; icon: string; input: string }> = {
+  number:  { pill: 'bg-amber-50 border border-amber-300 text-amber-700 hover:bg-amber-100',    icon: 'text-amber-400',  input: 'border border-amber-300 text-amber-800 focus:ring-amber-400' },
+  boolean: { pill: 'bg-violet-50 border border-violet-300 text-violet-700 hover:bg-violet-100', icon: 'text-violet-400', input: 'border border-violet-300 text-violet-800 focus:ring-violet-400' },
+  null:    { pill: 'bg-slate-100 border border-slate-400 text-slate-500 hover:bg-slate-200',     icon: 'text-slate-400',  input: 'border border-slate-400 text-slate-600 focus:ring-slate-400' },
+  text:    { pill: 'bg-green-50 border border-green-300 text-green-700 hover:bg-green-100',      icon: 'text-green-400',  input: 'border border-green-300 text-green-800 focus:ring-green-400' },
+};
+
+function LiteralIcon({ type, size = 12 }: { type: LiteralType; size?: number }) {
+  const cls = `${LITERAL_STYLES[type].icon} shrink-0`;
+  switch (type) {
+    case 'number':  return <Binary size={size} className={cls} />;
+    case 'boolean': return <ToggleLeft size={size} className={cls} />;
+    case 'null':    return <CircleOff size={size} className={cls} />;
+    default:        return <Type size={size} className={cls} />;
+  }
+}
+
 // ─── Literal Pill (editable) ─────────────────────────────────────
 
 function LiteralPill({ block }: { block: Block }) {
@@ -96,6 +128,9 @@ function LiteralPill({ block }: { block: Block }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(block.value ?? '""');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const litType = detectLiteralType(block.value ?? '""');
+  const styles = LITERAL_STYLES[litType];
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -135,17 +170,16 @@ function LiteralPill({ block }: { block: Block }) {
     <div
       draggable={!isEditing}
       onDragStart={handleDragStart}
-      className="
+      className={`
         group inline-flex items-center gap-1.5
         px-3 py-1.5 rounded-lg
-        bg-green-50 border border-green-300
-        text-green-700 text-sm font-mono
+        text-sm font-mono
         cursor-grab active:cursor-grabbing
-        hover:bg-green-100 hover:shadow-sm
-        transition-all duration-150
-      "
+        hover:shadow-sm transition-all duration-150
+        ${styles.pill}
+      `}
     >
-      <Type size={12} className="text-green-400 shrink-0" />
+      <LiteralIcon type={litType} />
       {isEditing ? (
         <input
           ref={inputRef}
@@ -154,12 +188,13 @@ function LiteralPill({ block }: { block: Block }) {
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={commitEdit}
           onKeyDown={handleKeyDown}
-          className="
-            bg-white border border-green-300 rounded px-1.5 py-0.5
-            text-sm font-mono text-green-800
-            outline-none focus:ring-2 focus:ring-green-400
+          className={`
+            bg-white rounded px-1.5 py-0.5
+            text-sm font-mono
+            outline-none focus:ring-2
             min-w-[60px] max-w-[180px]
-          "
+            ${styles.input}
+          `}
         />
       ) : (
         <span
@@ -283,6 +318,7 @@ function FunctionBlock({ block }: { block: Block }) {
                   parentId={block.id}
                   slotIndex={index}
                   label={argLabels[index] ?? `String ${index + 1}`}
+                  suggestions={meta?.argSuggestions?.[index]}
                 />
               )}
             </div>

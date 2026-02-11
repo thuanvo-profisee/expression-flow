@@ -37,6 +37,8 @@ export interface FunctionMeta {
   subcategory: FunctionSubcategory;
   isInfix?: boolean;
   variadic?: boolean;
+  /** Per-argument suggested literal values, keyed by arg index */
+  argSuggestions?: Record<number, string[]>;
 }
 
 /** Registry of all known functions and operators */
@@ -159,6 +161,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     description: 'Add day/month/year to a date',
     details: 'Syntax: DATEADD(<dateOrDateTimeExpression>, <numberToAdd>, <interval>)\n\nAdds the corresponding day/month/year to a given Date.\n\nParameters:\n• dateOrDateTimeExpression — Date or DateTime to augment\n• numberToAdd — Number to add\n• interval — Day, Month, or Year',
     color: 'teal', category: 'function', subcategory: 'datetime',
+    argSuggestions: { 2: ['DAY', 'MONTH', 'YEAR'] },
   },
   DATEDIFF: {
     name: 'DATEDIFF', label: 'DATEDIFF',
@@ -181,6 +184,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     description: 'Relative date (StartOfMonth, etc.)',
     details: 'Syntax: RELATIVEDATE(<givenDateOrDateTime>, <interval>)\n\nCalculates the relative date based on the Date or DateTime provided.\n\nParameters:\n• givenDateOrDateTime — Base Date or DateTime\n• interval — StartOfWeek, EndOfWeek, NextWeek, StartOfMonth, EndOfMonth, NextMonth, StartOfQuarter, EndOfQuarter, NextQuarter, StartOfYear, EndOfYear, NextYear',
     color: 'teal', category: 'function', subcategory: 'datetime',
+    argSuggestions: { 1: ['StartOfWeek', 'EndOfWeek', 'NextWeek', 'StartOfMonth', 'EndOfMonth', 'NextMonth', 'StartOfQuarter', 'EndOfQuarter', 'NextQuarter', 'StartOfYear', 'EndOfYear', 'NextYear'] },
   },
   NOW: {
     name: 'NOW', label: 'NOW',
@@ -414,101 +418,304 @@ export const EXPRESSION_MODE_META: Record<ExpressionMode, {
     description: 'Expression evaluates to true or false',
     returnType: 'Boolean (true / false)',
     color: 'amber',
-    example: '[ForecastMktSegment] = [MktSegment]',
+    example: '[Code] = CONCAT([Class].[Name], [Color].[Name])',
   },
   assignment: {
     label: 'Assignment',
     description: 'Expression returns a computed value',
     returnType: 'Value (string, number, etc.)',
     color: 'indigo',
-    example: 'IF(LENGTH([SnOPComputeArchGrp]) > 0, [SnOPComputeArchGrp], "")',
+    example: 'IF(LENGTH([Name]) > 0, [Name], "")',
   },
 };
 
 // ─── Attribute Tree ───────────────────────────────────────────────
 
+export interface PropertiesCallback {
+  dataKey: string;
+  path: string;
+  parameters: Record<string, string>;
+  httpMethod: string;
+  body: unknown | null;
+}
+
 export interface AttributeNode {
-  name: string;            // e.g. "[Product]"
+  id: string;              // e.g. "[Class].[Name]"
+  label: string;           // e.g. "Name"
+  value: string;           // full bracket path, e.g. "[Class].[Name]"
+  propertiesCallback: PropertiesCallback | null;
   children?: AttributeNode[];
+  isExpanded?: boolean;
 }
 
 /** Hierarchical attribute catalog — each node can have child properties */
 export const ATTRIBUTE_CATALOG: AttributeNode[] = [
-  { name: '[Code]' },
   {
-    name: '[Product]',
+    id: '[Name]',
+    label: 'Name',
+    value: '[Name]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[Code]',
+    label: 'Code',
+    value: '[Code]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[Class]',
+    label: 'Class',
+    value: '[Class]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmClass/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[Class]' },
+      httpMethod: 'GET',
+      body: null,
+    },
     children: [
+      { id: '[Class].[Name]', label: 'Name', value: '[Class].[Name]', propertiesCallback: null },
+      { id: '[Class].[Code]', label: 'Code', value: '[Class].[Code]', propertiesCallback: null },
+    ],
+  },
+  {
+    id: '[Color]',
+    label: 'Color',
+    value: '[Color]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmColor/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[Color]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [
+      { id: '[Color].[Name]', label: 'Name', value: '[Color].[Name]', propertiesCallback: null },
+      { id: '[Color].[Code]', label: 'Code', value: '[Color].[Code]', propertiesCallback: null },
+    ],
+  },
+  {
+    id: '[$EnterUserName]',
+    label: 'Created By',
+    value: '[$EnterUserName]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[$EnterDTM]',
+    label: 'Created On',
+    value: '[$EnterDTM]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[DealerCost]',
+    label: 'DealerCost',
+    value: '[DealerCost]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[DocumentationURL]',
+    label: 'DocumentationURL',
+    value: '[DocumentationURL]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[InHouseManufactured]',
+    label: 'InHouseManufactured',
+    value: '[InHouseManufactured]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmYesNo/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[InHouseManufactured]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [
+      { id: '[InHouseManufactured].[Name]', label: 'Name', value: '[InHouseManufactured].[Name]', propertiesCallback: null },
+      { id: '[InHouseManufactured].[Code]', label: 'Code', value: '[InHouseManufactured].[Code]', propertiesCallback: null },
+    ],
+  },
+  {
+    id: '[$LastChgUserName]',
+    label: 'Last Updated By',
+    value: '[$LastChgUserName]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[$LastChgDTM]',
+    label: 'Last Updated On',
+    value: '[$LastChgDTM]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[MSRP]',
+    label: 'MSRP',
+    value: '[MSRP]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[ProductLine]',
+    label: 'ProductLine',
+    value: '[ProductLine]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmProductLine/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[ProductLine]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [
+      { id: '[ProductLine].[Name]', label: 'Name', value: '[ProductLine].[Name]', propertiesCallback: null },
+      { id: '[ProductLine].[Code]', label: 'Code', value: '[ProductLine].[Code]', propertiesCallback: null },
+    ],
+  },
+  {
+    id: '[ProductSubcategory]',
+    label: 'ProductSubcategory',
+    value: '[ProductSubcategory]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmProductSubcategory/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[ProductSubcategory]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [
+      { id: '[ProductSubcategory].[Name]', label: 'Name', value: '[ProductSubcategory].[Name]', propertiesCallback: null },
+      { id: '[ProductSubcategory].[Code]', label: 'Code', value: '[ProductSubcategory].[Code]', propertiesCallback: null },
       {
-        name: '[ProductSubcategory]',
+        id: '[ProductSubcategory].[ProductCategory]',
+        label: 'ProductCategory',
+        value: '[ProductSubcategory].[ProductCategory]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmProductCategory/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[ProductSubcategory].[ProductCategory]' },
+          httpMethod: 'GET',
+          body: null,
+        },
         children: [
+          { id: '[ProductSubcategory].[ProductCategory].[Name]', label: 'Name', value: '[ProductSubcategory].[ProductCategory].[Name]', propertiesCallback: null },
+          { id: '[ProductSubcategory].[ProductCategory].[Code]', label: 'Code', value: '[ProductSubcategory].[ProductCategory].[Code]', propertiesCallback: null },
           {
-            name: '[ProductCategory]',
+            id: '[ProductSubcategory].[ProductCategory].[ProductGroup]',
+            label: 'ProductGroup',
+            value: '[ProductSubcategory].[ProductCategory].[ProductGroup]',
+            propertiesCallback: {
+              dataKey: 'data',
+              path: 'https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmProductGroup/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+              parameters: { pathString: '[ProductSubcategory].[ProductCategory].[ProductGroup]' },
+              httpMethod: 'GET',
+              body: null,
+            },
             children: [
-              {
-                name: '[ProductGroup]',
-                children: [
-                  { name: '[Name]' },
-                  { name: '[Code]' },
-                ],
-              },
+              { id: '[ProductSubcategory].[ProductCategory].[ProductGroup].[Name]', label: 'Name', value: '[ProductSubcategory].[ProductCategory].[ProductGroup].[Name]', propertiesCallback: null },
+              { id: '[ProductSubcategory].[ProductCategory].[ProductGroup].[Code]', label: 'Code', value: '[ProductSubcategory].[ProductCategory].[ProductGroup].[Code]', propertiesCallback: null },
             ],
           },
         ],
       },
-      { name: '[Name]' },
-      { name: '[Code]' },
     ],
   },
   {
-    name: '[SnOPPostSiliconSupplyProduct]',
+    id: '[ReorderPoint]',
+    label: 'ReorderPoint',
+    value: '[ReorderPoint]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[SafetyStockLevel]',
+    label: 'SafetyStockLevel',
+    value: '[SafetyStockLevel]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[SellEndDate]',
+    label: 'SellEndDate',
+    value: '[SellEndDate]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[SellStartDate]',
+    label: 'SellStartDate',
+    value: '[SellStartDate]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[Size]',
+    label: 'Size',
+    value: '[Size]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmSize/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[Size]' },
+      httpMethod: 'GET',
+      body: null,
+    },
     children: [
-      { name: '[MemberCd]' },
-      { name: '[Name]' },
+      { id: '[Size].[Name]', label: 'Name', value: '[Size].[Name]', propertiesCallback: null },
+      { id: '[Size].[Code]', label: 'Code', value: '[Size].[Code]', propertiesCallback: null },
     ],
   },
   {
-    name: '[SiliconSnOPSupplyProduct]',
+    id: '[SizeUofM]',
+    label: 'SizeUofM',
+    value: '[SizeUofM]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmUnitOfMeasure/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[SizeUofM]' },
+      httpMethod: 'GET',
+      body: null,
+    },
     children: [
-      { name: '[MemberCd]' },
-      { name: '[Name]' },
+      { id: '[SizeUofM].[Name]', label: 'Name', value: '[SizeUofM].[Name]', propertiesCallback: null },
+      { id: '[SizeUofM].[Code]', label: 'Code', value: '[SizeUofM].[Code]', propertiesCallback: null },
     ],
   },
   {
-    name: '[SnOPComputeArchGrp]',
+    id: '[StandardCost]',
+    label: 'StandardCost',
+    value: '[StandardCost]',
+    propertiesCallback: null,
+  },
+  {
+    id: '[Style]',
+    label: 'Style',
+    value: '[Style]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmStyle/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[Style]' },
+      httpMethod: 'GET',
+      body: null,
+    },
     children: [
-      { name: '[Name]' },
-      { name: '[Code]' },
+      { id: '[Style].[Name]', label: 'Name', value: '[Style].[Name]', propertiesCallback: null },
+      { id: '[Style].[Code]', label: 'Code', value: '[Style].[Code]', propertiesCallback: null },
     ],
   },
   {
-    name: '[ForecastMktSegment]',
-    children: [
-      { name: '[Name]' },
-      { name: '[Code]' },
-    ],
+    id: '[Weight]',
+    label: 'Weight',
+    value: '[Weight]',
+    propertiesCallback: null,
   },
   {
-    name: '[MktSegment]',
+    id: '[WeightUofM]',
+    label: 'WeightUofM',
+    value: '[WeightUofM]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmUnitOfMeasure/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[WeightUofM]' },
+      httpMethod: 'GET',
+      body: null,
+    },
     children: [
-      { name: '[Name]' },
-      { name: '[Code]' },
+      { id: '[WeightUofM].[Name]', label: 'Name', value: '[WeightUofM].[Name]', propertiesCallback: null },
+      { id: '[WeightUofM].[Code]', label: 'Code', value: '[WeightUofM].[Code]', propertiesCallback: null },
     ],
   },
-  {
-    name: '[SnOPSupplyProduct]',
-    children: [
-      { name: '[MemberCd]' },
-      { name: '[Name]' },
-    ],
-  },
-  { name: '[MarketingCdNm]' },
-  { name: '[CreatedBy]' },
-  { name: '[ProductGroup]' },
-  { name: '[Region]' },
-  { name: '[SalesOrg]' },
-  { name: '[FiscalYear]' },
-  { name: '[Currency]' },
-  { name: '[UnitOfMeasure]' },
 ];
 
 // ─── Drag & Drop ──────────────────────────────────────────────────

@@ -117,7 +117,7 @@ export function generateCode(block: Block | null): string {
 
 // ─── Demo Data ───────────────────────────────────────────────────
 
-/** Validation demo: [Code] = CONCAT([SnOPPostSiliconSupplyProduct].[MemberCd], [SiliconSnOPSupplyProduct].[MemberCd]) */
+/** Validation demo: [Code] = CONCAT([Class].[Name], [Color].[Name]) */
 const DEMO_VALIDATION: Block = {
   id: 'root-v',
   type: 'FUNCTION',
@@ -129,15 +129,15 @@ const DEMO_VALIDATION: Block = {
       type: 'FUNCTION',
       name: 'CONCAT',
       args: [
-        { id: 'v-attr2', type: 'ATTRIBUTE', name: '[SnOPPostSiliconSupplyProduct].[MemberCd]', args: [] },
-        { id: 'v-attr3', type: 'ATTRIBUTE', name: '[SiliconSnOPSupplyProduct].[MemberCd]', args: [] },
+        { id: 'v-attr2', type: 'ATTRIBUTE', name: '[Class].[Name]', args: [] },
+        { id: 'v-attr3', type: 'ATTRIBUTE', name: '[Color].[Name]', args: [] },
         null,
       ],
     },
   ],
 };
 
-/** Assignment demo: IF(LENGTH([SnOPComputeArchGrp]) > 0, [SnOPComputeArchGrp], "") */
+/** Assignment demo: IF(LENGTH([Name]) > 0, [Name], "") */
 const DEMO_ASSIGNMENT: Block = {
   id: 'root-a',
   type: 'FUNCTION',
@@ -153,13 +153,13 @@ const DEMO_ASSIGNMENT: Block = {
           type: 'FUNCTION',
           name: 'LENGTH',
           args: [
-            { id: 'a-attr1', type: 'ATTRIBUTE', name: '[SnOPComputeArchGrp]', args: [] },
+            { id: 'a-attr1', type: 'ATTRIBUTE', name: '[Name]', args: [] },
           ],
         },
         { id: 'a-lit1', type: 'LITERAL', name: 'Literal', value: '0', args: [] },
       ],
     },
-    { id: 'a-attr2', type: 'ATTRIBUTE', name: '[SnOPComputeArchGrp]', args: [] },
+    { id: 'a-attr2', type: 'ATTRIBUTE', name: '[Name]', args: [] },
     { id: 'a-lit2', type: 'LITERAL', name: 'Literal', value: '""', args: [] },
   ],
 };

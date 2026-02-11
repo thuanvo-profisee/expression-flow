@@ -202,11 +202,6 @@ function FunctionCard({ meta }: { meta: FunctionMeta }) {
               <span className="text-xs font-semibold text-slate-700">
                 {meta.label}
               </span>
-              {meta.description && (
-                <span className="text-[9px] text-slate-400 ml-1 hidden group-hover:inline">
-                  — {meta.description}
-                </span>
-              )}
             </div>
 
             <span className="text-[9px] text-slate-400 bg-slate-50 px-1 py-0.5 rounded shrink-0">
@@ -238,7 +233,6 @@ function OperatorChip({ meta }: { meta: FunctionMeta }) {
             font-mono font-bold text-sm text-slate-700
             hover:text-emerald-700
           "
-          title={meta.description}
         >
           {meta.label}
         </div>
