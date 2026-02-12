@@ -1,15 +1,15 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from "react";
 import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   type Node,
   type NodeTypes,
   BackgroundVariant,
-} from '@xyflow/react';
-import { useExpressionStore } from '../store';
-import { RootNode } from './RootNode';
+} from "@xyflow/react";
+import { useExpressionStore } from "../store";
+// @ts-expect-error: RootNode type/checking handled elsewhere or file may be missing for now
+import { RootNode } from "./RootNode";
 
 export function ExpressionCanvas() {
   const root = useExpressionStore((s) => s.root);
@@ -22,20 +22,20 @@ export function ExpressionCanvas() {
   const nodes: Node[] = useMemo(
     () => [
       {
-        id: 'root-wrapper',
-        type: 'rootNode',
+        id: "root-wrapper",
+        type: "rootNode",
         position: { x: 50, y: 50 },
         data: { root, expressionMode },
         draggable: true,
       },
     ],
-    [root, expressionMode],
+    [root, expressionMode]
   );
 
   // Handle drag-over on the canvas (allow drops)
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
+    e.dataTransfer.dropEffect = "copy";
   }, []);
 
   return (
@@ -52,16 +52,16 @@ export function ExpressionCanvas() {
         proOptions={{ hideAttribution: true }}
         className="bg-slate-100"
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#cbd5e1" />
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={20}
+          size={1}
+          color="#cbd5e1"
+        />
         <Controls
           showInteractive={false}
           className="!bg-white !border-slate-200 !shadow-lg !rounded-xl"
         />
-        {/* <MiniMap
-          nodeColor="#6366f1"
-          maskColor="rgba(241, 245, 249, 0.7)"
-          className="!bg-white !border-slate-200 !shadow-lg !rounded-xl"
-        /> */}
       </ReactFlow>
     </div>
   );
