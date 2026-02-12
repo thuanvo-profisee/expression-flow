@@ -23,7 +23,7 @@ import {
   Search,
 } from "lucide-react";
 import type { Block } from "../types";
-import { FUNCTION_REGISTRY, FLAT_ATTRIBUTES } from "../types";
+import { FUNCTION_REGISTRY } from "../types";
 import { useExpressionStore } from "../store";
 import { DropZone } from "./DropZone";
 
@@ -142,6 +142,7 @@ function parseAttributeSegments(path: string): string[] {
 function AttributePill({ block }: { block: Block }) {
   const removeBlock = useExpressionStore((s) => s.removeBlock);
   const updateBlockName = useExpressionStore((s) => s.updateBlockName);
+  const flatAttributes = useExpressionStore((s) => s.flatAttributes);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightIdx, setHighlightIdx] = useState(0);
@@ -154,12 +155,12 @@ function AttributePill({ block }: { block: Block }) {
 
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return FLAT_ATTRIBUTES;
-    return FLAT_ATTRIBUTES.filter(
+    if (!q) return flatAttributes;
+    return flatAttributes.filter(
       (a) =>
         a.label.toLowerCase().includes(q) || a.value.toLowerCase().includes(q)
     );
-  }, [searchQuery]);
+  }, [searchQuery, flatAttributes]);
 
   // Position the dropdown below the pill
   useLayoutEffect(() => {

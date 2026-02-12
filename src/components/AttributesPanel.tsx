@@ -12,7 +12,7 @@ import {
   Binary,
 } from "lucide-react";
 import type { DragItem, AttributeNode } from "../types";
-import { ATTRIBUTE_CATALOG } from "../types";
+import { ATTRIBUTE_CATALOGS, ATTRIBUTE_CATALOG_KEYS } from "../types";
 import { useExpressionStore, generateCode } from "../store";
 
 // ─── Helpers ────────────────────────────────────────────────────
@@ -277,7 +277,7 @@ function CustomValueInput() {
       <div className="flex flex-wrap gap-1">
         {(
           [
-            ['""', 'EMPTY'],
+            ['""', "EMPTY"],
             ['" "', "SPACE"],
             ["NULL", "NULL"],
             ["TRUE", "TRUE"],
@@ -354,39 +354,48 @@ const DEFAULT_WIDTH = 300;
 export function AttributesPanel() {
   const roots = useExpressionStore((s) => s.roots);
   const blockConfigs = useExpressionStore((s) => s.blockConfigs);
+  const activeCatalogKey = useExpressionStore((s) => s.activeCatalogKey);
+  const activeCatalog = useExpressionStore((s) => s.activeCatalog);
+  const setActiveCatalog = useExpressionStore((s) => s.setActiveCatalog);
   const [search, setSearch] = useState("");
   const lowerSearch = search.toLowerCase().trim();
 
   const [width, setWidth] = useState(DEFAULT_WIDTH);
   const isResizing = useRef(false);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    isResizing.current = true;
-    const startX = e.clientX;
-    const startWidth = width;
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      isResizing.current = true;
+      const startX = e.clientX;
+      const startWidth = width;
 
-    const onMouseMove = (ev: MouseEvent) => {
-      if (!isResizing.current) return;
-      // Dragging left increases width, dragging right decreases
-      const delta = startX - ev.clientX;
-      const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + delta));
-      setWidth(newWidth);
-    };
+      const onMouseMove = (ev: MouseEvent) => {
+        if (!isResizing.current) return;
+        // Dragging left increases width, dragging right decreases
+        const delta = startX - ev.clientX;
+        const newWidth = Math.min(
+          MAX_WIDTH,
+          Math.max(MIN_WIDTH, startWidth + delta)
+        );
+        setWidth(newWidth);
+      };
 
-    const onMouseUp = () => {
-      isResizing.current = false;
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
+      const onMouseUp = () => {
+        isResizing.current = false;
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      };
 
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
-  }, [width]);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    },
+    [width]
+  );
 
   return (
     <div
@@ -410,8 +419,51 @@ export function AttributesPanel() {
         </h2>
       </div>
 
+      {/* Entity / Catalog Picker */}
+      <div className="px-3 py-2 border-b border-slate-200 bg-slate-50/80">
+        <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+          Entity
+        </div>
+        <div className="flex gap-0.5 p-0.5 bg-slate-200/60 rounded-lg">
+          {ATTRIBUTE_CATALOG_KEYS.map((key) => {
+            const entry = ATTRIBUTE_CATALOGS[key];
+            const isActive = activeCatalogKey === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setActiveCatalog(key)}
+                className={`
+                  flex-1 flex items-center justify-center gap-1
+                  px-2 py-1.5 rounded-md text-[10px] font-semibold
+                  transition-all duration-200
+                  ${
+                    isActive
+                      ? "bg-white text-blue-700 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-white/40"
+                  }
+                `}
+              >
+                {entry.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto sidebar-scroll p-3 space-y-4">
+        {/* Custom Value — collapsible */}
+        <CollapsibleSection
+          icon={<Plus size={10} />}
+          label="Custom Value"
+          defaultOpen
+        >
+          <CustomValueInput />
+        </CollapsibleSection>
+
+        {/* Break line */}
+        <div className="h-px bg-slate-200 w-full" />
+
         {/* Search */}
         <div className="relative">
           <Search
@@ -427,24 +479,15 @@ export function AttributesPanel() {
           />
         </div>
 
-        {/* Custom Value — collapsible */}
-        <CollapsibleSection
-          icon={<Plus size={10} />}
-          label="Custom Value"
-          defaultOpen
-        >
-          <CustomValueInput />
-        </CollapsibleSection>
-
         {/* Data Attributes Tree — collapsible */}
         <CollapsibleSection
           icon={<Database size={10} />}
           label="Attributes"
-          count={ATTRIBUTE_CATALOG.length}
+          count={activeCatalog.length}
           defaultOpen
         >
           <div className="space-y-0.5">
-            {ATTRIBUTE_CATALOG.map((node) => (
+            {activeCatalog.map((node) => (
               <AttributeTreeNode
                 key={node.id}
                 node={node}
@@ -454,7 +497,6 @@ export function AttributesPanel() {
             ))}
           </div>
         </CollapsibleSection>
-
       </div>
 
       {/* Generated Code Panel */}
@@ -478,9 +520,10 @@ export function AttributesPanel() {
                   <span
                     className={`
                       text-[8px] font-semibold px-1 py-0.5 rounded shrink-0
-                      ${isValidation
-                        ? "bg-amber-100 text-amber-600"
-                        : "bg-indigo-100 text-indigo-600"
+                      ${
+                        isValidation
+                          ? "bg-amber-100 text-amber-600"
+                          : "bg-indigo-100 text-indigo-600"
                       }
                     `}
                   >

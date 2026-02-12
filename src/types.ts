@@ -458,8 +458,17 @@ export interface AttributeNode {
   isExpanded?: boolean;
 }
 
-/** Hierarchical attribute catalog — each node can have child properties */
-export const ATTRIBUTE_CATALOG: AttributeNode[] = [
+/** Catalog key type for switching between demo datasets */
+export type AttributeCatalogKey = 'product' | 'supplyProduct';
+
+export interface AttributeCatalogEntry {
+  key: AttributeCatalogKey;
+  label: string;
+  catalog: AttributeNode[];
+}
+
+/** Hierarchical attribute catalog — Product demo entity */
+const CATALOG_PRODUCT: AttributeNode[] = [
   {
     id: '[Name]',
     label: 'Name',
@@ -728,6 +737,510 @@ export const ATTRIBUTE_CATALOG: AttributeNode[] = [
   },
 ];
 
+/** Hierarchical attribute catalog — SnOP Supply Product demo entity */
+const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
+  { id: '[Name]', label: 'Name', value: '[Name]', propertiesCallback: null },
+  { id: '[Code]', label: 'Code', value: '[Code]', propertiesCallback: null },
+  {
+    id: '[ChangeStatusSUP]',
+    label: 'ChangeStatusSUP',
+    value: '[ChangeStatusSUP]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_ProductDSStatus/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[ChangeStatusSUP]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [
+      { id: '[ChangeStatusSUP].[Name]', label: 'Name', value: '[ChangeStatusSUP].[Name]', propertiesCallback: null },
+      { id: '[ChangeStatusSUP].[Code]', label: 'Code', value: '[ChangeStatusSUP].[Code]', propertiesCallback: null },
+    ],
+  },
+  { id: '[Comments]', label: 'Comments', value: '[Comments]', propertiesCallback: null },
+  {
+    id: '[CompanyIndSUP]',
+    label: 'CompanyIndSUP',
+    value: '[CompanyIndSUP]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Company_Indicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[CompanyIndSUP]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [],
+  },
+  { id: '[$EnterUserName]', label: 'Created By', value: '[$EnterUserName]', propertiesCallback: null },
+  { id: '[$EnterDTM]', label: 'Created On', value: '[$EnterDTM]', propertiesCallback: null },
+  { id: '[DS1S]', label: 'DS1S', value: '[DS1S]', propertiesCallback: null },
+  { id: '[DS2S]', label: 'DS2S', value: '[DS2S]', propertiesCallback: null },
+  { id: '[DS3S]', label: 'DS3S', value: '[DS3S]', propertiesCallback: null },
+  { id: '[FlagSysSupPublish]', label: 'FlagSysSupPublish', value: '[FlagSysSupPublish]', propertiesCallback: null },
+  {
+    id: '[IsActive]',
+    label: 'IsActive',
+    value: '[IsActive]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[IsActive]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [
+      { id: '[IsActive].[Name]', label: 'Name', value: '[IsActive].[Name]', propertiesCallback: null },
+      { id: '[IsActive].[Code]', label: 'Code', value: '[IsActive].[Code]', propertiesCallback: null },
+    ],
+  },
+  { id: '[$LastChgUserName]', label: 'Last Updated By', value: '[$LastChgUserName]', propertiesCallback: null },
+  { id: '[$LastChgDTM]', label: 'Last Updated On', value: '[$LastChgDTM]', propertiesCallback: null },
+  { id: '[LastChangeUserDtm]', label: 'LastChangeUserDtm', value: '[LastChangeUserDtm]', propertiesCallback: null },
+  { id: '[LastChangeUserNm]', label: 'LastChangeUserNm', value: '[LastChangeUserNm]', propertiesCallback: null },
+  { id: '[LastUpdatedByTxn]', label: 'LastUpdatedByTxn', value: '[LastUpdatedByTxn]', propertiesCallback: null },
+  { id: '[Links]', label: 'Links', value: '[Links]', propertiesCallback: null },
+  { id: '[MapLRPAssyUPI]', label: 'MapLRPAssyUPI', value: '[MapLRPAssyUPI]', propertiesCallback: null },
+  { id: '[MemberCd]', label: 'MemberCd', value: '[MemberCd]', propertiesCallback: null },
+  { id: '[ParentLastChangeUserDtm]', label: 'ParentLastChangeUserDtm', value: '[ParentLastChangeUserDtm]', propertiesCallback: null },
+  { id: '[PkgVariant]', label: 'PkgVariant', value: '[PkgVariant]', propertiesCallback: null },
+  {
+    id: '[PkgVariantId]',
+    label: 'PkgVariantId',
+    value: '[PkgVariantId]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_PackageVariant/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[PkgVariantId]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [
+      { id: '[PkgVariantId].[Name]', label: 'Name', value: '[PkgVariantId].[Name]', propertiesCallback: null },
+      { id: '[PkgVariantId].[Code]', label: 'Code', value: '[PkgVariantId].[Code]', propertiesCallback: null },
+      { id: '[PkgVariantId].[ItemClassCd]', label: 'ItemClassCd', value: '[PkgVariantId].[ItemClassCd]', propertiesCallback: null },
+      { id: '[PkgVariantId].[ItemClassNm]', label: 'ItemClassNm', value: '[PkgVariantId].[ItemClassNm]', propertiesCallback: null },
+      { id: '[PkgVariantId].[MaterialTypeCd]', label: 'MaterialTypeCd', value: '[PkgVariantId].[MaterialTypeCd]', propertiesCallback: null },
+      { id: '[PkgVariantId].[MaterialTypeDsc]', label: 'MaterialTypeDsc', value: '[PkgVariantId].[MaterialTypeDsc]', propertiesCallback: null },
+      { id: '[PkgVariantId].[MemberCd]', label: 'MemberCd', value: '[PkgVariantId].[MemberCd]', propertiesCallback: null },
+      { id: '[PkgVariantId].[OwningSystemId]', label: 'OwningSystemId', value: '[PkgVariantId].[OwningSystemId]', propertiesCallback: null },
+      { id: '[PkgVariantId].[PackageVariantId]', label: 'PackageVariantId', value: '[PkgVariantId].[PackageVariantId]', propertiesCallback: null },
+      { id: '[PkgVariantId].[PackageVariantNm]', label: 'PackageVariantNm', value: '[PkgVariantId].[PackageVariantNm]', propertiesCallback: null },
+    ],
+  },
+  {
+    id: '[PlaceHolderSupInd]',
+    label: 'PlaceHolderSupInd',
+    value: '[PlaceHolderSupInd]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[PlaceHolderSupInd]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [
+      { id: '[PlaceHolderSupInd].[Name]', label: 'Name', value: '[PlaceHolderSupInd].[Name]', propertiesCallback: null },
+      { id: '[PlaceHolderSupInd].[Code]', label: 'Code', value: '[PlaceHolderSupInd].[Code]', propertiesCallback: null },
+    ],
+  },
+  { id: '[PublishDateSUP]', label: 'PublishDateSUP', value: '[PublishDateSUP]', propertiesCallback: null },
+  {
+    id: '[PublishIndicatorSUP]',
+    label: 'PublishIndicatorSUP',
+    value: '[PublishIndicatorSUP]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_ProductPublishIndicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[PublishIndicatorSUP]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [
+      { id: '[PublishIndicatorSUP].[Name]', label: 'Name', value: '[PublishIndicatorSUP].[Name]', propertiesCallback: null },
+      { id: '[PublishIndicatorSUP].[Code]', label: 'Code', value: '[PublishIndicatorSUP].[Code]', propertiesCallback: null },
+    ],
+  },
+  { id: '[RefDLCPRange]', label: 'RefDLCPRange', value: '[RefDLCPRange]', propertiesCallback: null },
+  { id: '[RefMapInternalSiliconCdNm]', label: 'RefMapInternalSiliconCdNm', value: '[RefMapInternalSiliconCdNm]', propertiesCallback: null },
+  { id: '[RefMapNativeCore]', label: 'RefMapNativeCore', value: '[RefMapNativeCore]', propertiesCallback: null },
+  { id: '[RefMapPinCount]', label: 'RefMapPinCount', value: '[RefMapPinCount]', propertiesCallback: null },
+  { id: '[RefPkgFunctionalType]', label: 'RefPkgFunctionalType', value: '[RefPkgFunctionalType]', propertiesCallback: null },
+  { id: '[RefSnOPBoardFormFactor]', label: 'RefSnOPBoardFormFactor', value: '[RefSnOPBoardFormFactor]', propertiesCallback: null },
+  { id: '[RefSnOPProcess]', label: 'RefSnOPProcess', value: '[RefSnOPProcess]', propertiesCallback: null },
+  { id: '[RefSnOPProcessNode]', label: 'RefSnOPProcessNode', value: '[RefSnOPProcessNode]', propertiesCallback: null },
+  {
+    id: '[SnOPDemandProduct]',
+    label: 'SnOPDemandProduct',
+    value: '[SnOPDemandProduct]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Demand_Product/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[SnOPDemandProduct]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [
+      { id: '[SnOPDemandProduct].[Name]', label: 'Name', value: '[SnOPDemandProduct].[Name]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[Code]', label: 'Code', value: '[SnOPDemandProduct].[Code]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[BaseUOM]', label: 'BaseUOM', value: '[SnOPDemandProduct].[BaseUOM]', propertiesCallback: null },
+      {
+        id: '[SnOPDemandProduct].[ChangeStatusDMD]',
+        label: 'ChangeStatusDMD',
+        value: '[SnOPDemandProduct].[ChangeStatusDMD]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_ProductDSStatus/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[SnOPDemandProduct].[ChangeStatusDMD]' },
+          httpMethod: 'GET',
+          body: null,
+        },
+        children: [
+          { id: '[SnOPDemandProduct].[ChangeStatusDMD].[Name]', label: 'Name', value: '[SnOPDemandProduct].[ChangeStatusDMD].[Name]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[ChangeStatusDMD].[Code]', label: 'Code', value: '[SnOPDemandProduct].[ChangeStatusDMD].[Code]', propertiesCallback: null },
+        ],
+      },
+      { id: '[SnOPDemandProduct].[Comments]', label: 'Comments', value: '[SnOPDemandProduct].[Comments]', propertiesCallback: null },
+      {
+        id: '[SnOPDemandProduct].[CompanyIndDMD]',
+        label: 'CompanyIndDMD',
+        value: '[SnOPDemandProduct].[CompanyIndDMD]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Company_Indicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[SnOPDemandProduct].[CompanyIndDMD]' },
+          httpMethod: 'GET',
+          body: null,
+        },
+        children: [
+          { id: '[SnOPDemandProduct].[CompanyIndDMD].[Name]', label: 'Name', value: '[SnOPDemandProduct].[CompanyIndDMD].[Name]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[CompanyIndDMD].[Code]', label: 'Code', value: '[SnOPDemandProduct].[CompanyIndDMD].[Code]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[CompanyIndDMD].[CompanyInd]', label: 'CompanyInd', value: '[SnOPDemandProduct].[CompanyIndDMD].[CompanyInd]', propertiesCallback: null },
+        ],
+      },
+      { id: '[SnOPDemandProduct].[DependentDBAUpdtDtm]', label: 'DependentDBAUpdtDtm', value: '[SnOPDemandProduct].[DependentDBAUpdtDtm]', propertiesCallback: null },
+      {
+        id: '[SnOPDemandProduct].[DesignBizCd]',
+        label: 'DesignBizCd',
+        value: '[SnOPDemandProduct].[DesignBizCd]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Profit_Center_Hierarchy/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[SnOPDemandProduct].[DesignBizCd]' },
+          httpMethod: 'GET',
+          body: null,
+        },
+        children: [
+          { id: '[SnOPDemandProduct].[DesignBizCd].[Name]', label: 'Name', value: '[SnOPDemandProduct].[DesignBizCd].[Name]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[Code]', label: 'Code', value: '[SnOPDemandProduct].[DesignBizCd].[Code]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[DivisionCd]', label: 'DivisionCd', value: '[SnOPDemandProduct].[DesignBizCd].[DivisionCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[DivisionDsc]', label: 'DivisionDsc', value: '[SnOPDemandProduct].[DesignBizCd].[DivisionDsc]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[DivisionLongNm]', label: 'DivisionLongNm', value: '[SnOPDemandProduct].[DesignBizCd].[DivisionLongNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[DivisionNm]', label: 'DivisionNm', value: '[SnOPDemandProduct].[DesignBizCd].[DivisionNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[FinancialReportingCategoryCd]', label: 'FinancialReportingCategoryCd', value: '[SnOPDemandProduct].[DesignBizCd].[FinancialReportingCategoryCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[GroupCd]', label: 'GroupCd', value: '[SnOPDemandProduct].[DesignBizCd].[GroupCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[GroupDsc]', label: 'GroupDsc', value: '[SnOPDemandProduct].[DesignBizCd].[GroupDsc]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[GroupLongNm]', label: 'GroupLongNm', value: '[SnOPDemandProduct].[DesignBizCd].[GroupLongNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[GroupNm]', label: 'GroupNm', value: '[SnOPDemandProduct].[DesignBizCd].[GroupNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[LastDaaSSyncDateTm]', label: 'LastDaaSSyncDateTm', value: '[SnOPDemandProduct].[DesignBizCd].[LastDaaSSyncDateTm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[MemberCd]', label: 'MemberCd', value: '[SnOPDemandProduct].[DesignBizCd].[MemberCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ProductPlanningInd]', label: 'ProductPlanningInd', value: '[SnOPDemandProduct].[DesignBizCd].[ProductPlanningInd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterCd]', label: 'ProfitCenterCd', value: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterClassificationInd]', label: 'ProfitCenterClassificationInd', value: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterClassificationInd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterCreateDt]', label: 'ProfitCenterCreateDt', value: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterCreateDt]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterDsc]', label: 'ProfitCenterDsc', value: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterDsc]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterLockInd]', label: 'ProfitCenterLockInd', value: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterLockInd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterNm]', label: 'ProfitCenterNm', value: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterTypeCd]', label: 'ProfitCenterTypeCd', value: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterTypeCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterTypeInd]', label: 'ProfitCenterTypeInd', value: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterTypeInd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterValidFromDt]', label: 'ProfitCenterValidFromDt', value: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterValidFromDt]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterValidToDt]', label: 'ProfitCenterValidToDt', value: '[SnOPDemandProduct].[DesignBizCd].[ProfitCenterValidToDt]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[SuperGroupCd]', label: 'SuperGroupCd', value: '[SnOPDemandProduct].[DesignBizCd].[SuperGroupCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[SuperGroupDsc]', label: 'SuperGroupDsc', value: '[SnOPDemandProduct].[DesignBizCd].[SuperGroupDsc]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[SupergroupLongNm]', label: 'SupergroupLongNm', value: '[SnOPDemandProduct].[DesignBizCd].[SupergroupLongNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[SuperGroupNm]', label: 'SuperGroupNm', value: '[SnOPDemandProduct].[DesignBizCd].[SuperGroupNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ValidFromDt]', label: 'ValidFromDt', value: '[SnOPDemandProduct].[DesignBizCd].[ValidFromDt]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[DesignBizCd].[ValidToDt]', label: 'ValidToDt', value: '[SnOPDemandProduct].[DesignBizCd].[ValidToDt]', propertiesCallback: null },
+        ],
+      },
+      { id: '[SnOPDemandProduct].[DesignBizId]', label: 'DesignBizId', value: '[SnOPDemandProduct].[DesignBizId]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[DesignBizNm]', label: 'DesignBizNm', value: '[SnOPDemandProduct].[DesignBizNm]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[DmdClassification]', label: 'DmdClassification', value: '[SnOPDemandProduct].[DmdClassification]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[DS1D]', label: 'DS1D', value: '[SnOPDemandProduct].[DS1D]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[DS2D]', label: 'DS2D', value: '[SnOPDemandProduct].[DS2D]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[DS3D]', label: 'DS3D', value: '[SnOPDemandProduct].[DS3D]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[IOTMktSwimlaneGrp]', label: 'IOTMktSwimlaneGrp', value: '[SnOPDemandProduct].[IOTMktSwimlaneGrp]', propertiesCallback: null },
+      {
+        id: '[SnOPDemandProduct].[IsActive]',
+        label: 'IsActive',
+        value: '[SnOPDemandProduct].[IsActive]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[SnOPDemandProduct].[IsActive]' },
+          httpMethod: 'GET',
+          body: null,
+        },
+        children: [
+          { id: '[SnOPDemandProduct].[IsActive].[Name]', label: 'Name', value: '[SnOPDemandProduct].[IsActive].[Name]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[IsActive].[Code]', label: 'Code', value: '[SnOPDemandProduct].[IsActive].[Code]', propertiesCallback: null },
+        ],
+      },
+      { id: '[SnOPDemandProduct].[LastChangeUserDtm]', label: 'LastChangeUserDtm', value: '[SnOPDemandProduct].[LastChangeUserDtm]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[LastChangeUserNm]', label: 'LastChangeUserNm', value: '[SnOPDemandProduct].[LastChangeUserNm]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[LastUpdatedByTxn]', label: 'LastUpdatedByTxn', value: '[SnOPDemandProduct].[LastUpdatedByTxn]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[LegalMktCdNm]', label: 'LegalMktCdNm', value: '[SnOPDemandProduct].[LegalMktCdNm]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[Links]', label: 'Links', value: '[SnOPDemandProduct].[Links]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[MarketingCdNm]', label: 'MarketingCdNm', value: '[SnOPDemandProduct].[MarketingCdNm]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[MarketingCdNmAbbrev]', label: 'MarketingCdNmAbbrev', value: '[SnOPDemandProduct].[MarketingCdNmAbbrev]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[MemberCd]', label: 'MemberCd', value: '[SnOPDemandProduct].[MemberCd]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[ModemPlatformGroup]', label: 'ModemPlatformGroup', value: '[SnOPDemandProduct].[ModemPlatformGroup]', propertiesCallback: null },
+      {
+        id: '[SnOPDemandProduct].[PlaceHolderDmdInd]',
+        label: 'PlaceHolderDmdInd',
+        value: '[SnOPDemandProduct].[PlaceHolderDmdInd]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[SnOPDemandProduct].[PlaceHolderDmdInd]' },
+          httpMethod: 'GET',
+          body: null,
+        },
+        children: [
+          { id: '[SnOPDemandProduct].[PlaceHolderDmdInd].[Name]', label: 'Name', value: '[SnOPDemandProduct].[PlaceHolderDmdInd].[Name]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[PlaceHolderDmdInd].[Code]', label: 'Code', value: '[SnOPDemandProduct].[PlaceHolderDmdInd].[Code]', propertiesCallback: null },
+        ],
+      },
+      { id: '[SnOPDemandProduct].[PublishDateDMD]', label: 'PublishDateDMD', value: '[SnOPDemandProduct].[PublishDateDMD]', propertiesCallback: null },
+      {
+        id: '[SnOPDemandProduct].[PublishIndicatorDMD]',
+        label: 'PublishIndicatorDMD',
+        value: '[SnOPDemandProduct].[PublishIndicatorDMD]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_ProductPublishIndicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[SnOPDemandProduct].[PublishIndicatorDMD]' },
+          httpMethod: 'GET',
+          body: null,
+        },
+        children: [
+          { id: '[SnOPDemandProduct].[PublishIndicatorDMD].[Name]', label: 'Name', value: '[SnOPDemandProduct].[PublishIndicatorDMD].[Name]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[PublishIndicatorDMD].[Code]', label: 'Code', value: '[SnOPDemandProduct].[PublishIndicatorDMD].[Code]', propertiesCallback: null },
+        ],
+      },
+      { id: '[SnOPDemandProduct].[SnOPBoardFormFactor]', label: 'SnOPBoardFormFactor', value: '[SnOPDemandProduct].[SnOPBoardFormFactor]', propertiesCallback: null },
+      {
+        id: '[SnOPDemandProduct].[SnOPBrandGrp]',
+        label: 'SnOPBrandGrp',
+        value: '[SnOPDemandProduct].[SnOPBrandGrp]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_BrandGroup/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[SnOPDemandProduct].[SnOPBrandGrp]' },
+          httpMethod: 'GET',
+          body: null,
+        },
+        children: [
+          { id: '[SnOPDemandProduct].[SnOPBrandGrp].[Name]', label: 'Name', value: '[SnOPDemandProduct].[SnOPBrandGrp].[Name]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPBrandGrp].[Code]', label: 'Code', value: '[SnOPDemandProduct].[SnOPBrandGrp].[Code]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPBrandGrp].[LastChangeUserDtm]', label: 'LastChangeUserDtm', value: '[SnOPDemandProduct].[SnOPBrandGrp].[LastChangeUserDtm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPBrandGrp].[LastChangeUserNm]', label: 'LastChangeUserNm', value: '[SnOPDemandProduct].[SnOPBrandGrp].[LastChangeUserNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPBrandGrp].[MemberCd]', label: 'MemberCd', value: '[SnOPDemandProduct].[SnOPBrandGrp].[MemberCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPBrandGrp].[SnOPBrandGrp]', label: 'SnOPBrandGrp', value: '[SnOPDemandProduct].[SnOPBrandGrp].[SnOPBrandGrp]', propertiesCallback: null },
+        ],
+      },
+      {
+        id: '[SnOPDemandProduct].[SnOPComputeArchGrp]',
+        label: 'SnOPComputeArchGrp',
+        value: '[SnOPDemandProduct].[SnOPComputeArchGrp]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_ComputeArchitectureGroup/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[SnOPDemandProduct].[SnOPComputeArchGrp]' },
+          httpMethod: 'GET',
+          body: null,
+        },
+        children: [
+          { id: '[SnOPDemandProduct].[SnOPComputeArchGrp].[Name]', label: 'Name', value: '[SnOPDemandProduct].[SnOPComputeArchGrp].[Name]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPComputeArchGrp].[Code]', label: 'Code', value: '[SnOPDemandProduct].[SnOPComputeArchGrp].[Code]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPComputeArchGrp].[LastChangeUserDtm]', label: 'LastChangeUserDtm', value: '[SnOPDemandProduct].[SnOPComputeArchGrp].[LastChangeUserDtm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPComputeArchGrp].[LastChangeUserNm]', label: 'LastChangeUserNm', value: '[SnOPDemandProduct].[SnOPComputeArchGrp].[LastChangeUserNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPComputeArchGrp].[MemberCd]', label: 'MemberCd', value: '[SnOPDemandProduct].[SnOPComputeArchGrp].[MemberCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPComputeArchGrp].[SnOPComputeArchGrp]', label: 'SnOPComputeArchGrp', value: '[SnOPDemandProduct].[SnOPComputeArchGrp].[SnOPComputeArchGrp]', propertiesCallback: null },
+        ],
+      },
+      { id: '[SnOPDemandProduct].[SnOPDataRate]', label: 'SnOPDataRate', value: '[SnOPDemandProduct].[SnOPDataRate]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[SnOPDemandProduct]', label: 'SnOPDemandProduct', value: '[SnOPDemandProduct].[SnOPDemandProduct]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[SnOPDemandShortNm]', label: 'SnOPDemandShortNm', value: '[SnOPDemandProduct].[SnOPDemandShortNm]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[SnOPFunctionalCoreGrp]', label: 'SnOPFunctionalCoreGrp', value: '[SnOPDemandProduct].[SnOPFunctionalCoreGrp]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[SnOPGraphicsTier]', label: 'SnOPGraphicsTier', value: '[SnOPDemandProduct].[SnOPGraphicsTier]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[SnOPMemoryCapacity]', label: 'SnOPMemoryCapacity', value: '[SnOPDemandProduct].[SnOPMemoryCapacity]', propertiesCallback: null },
+      {
+        id: '[SnOPDemandProduct].[SnOPMktSwimlane]',
+        label: 'SnOPMktSwimlane',
+        value: '[SnOPDemandProduct].[SnOPMktSwimlane]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_MarketSwimlane/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[SnOPDemandProduct].[SnOPMktSwimlane]' },
+          httpMethod: 'GET',
+          body: null,
+        },
+        children: [
+          { id: '[SnOPDemandProduct].[SnOPMktSwimlane].[Name]', label: 'Name', value: '[SnOPDemandProduct].[SnOPMktSwimlane].[Name]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPMktSwimlane].[Code]', label: 'Code', value: '[SnOPDemandProduct].[SnOPMktSwimlane].[Code]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPMktSwimlane].[LastChangeUserDtm]', label: 'LastChangeUserDtm', value: '[SnOPDemandProduct].[SnOPMktSwimlane].[LastChangeUserDtm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPMktSwimlane].[LastChangeUserNm]', label: 'LastChangeUserNm', value: '[SnOPDemandProduct].[SnOPMktSwimlane].[LastChangeUserNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPMktSwimlane].[MemberCd]', label: 'MemberCd', value: '[SnOPDemandProduct].[SnOPMktSwimlane].[MemberCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPMktSwimlane].[SnOPMktSwimlane]', label: 'SnOPMktSwimlane', value: '[SnOPDemandProduct].[SnOPMktSwimlane].[SnOPMktSwimlane]', propertiesCallback: null },
+        ],
+      },
+      {
+        id: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp]',
+        label: 'SnOPMktSwimlaneGrp',
+        value: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_MarketSwimlaneGroup/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp]' },
+          httpMethod: 'GET',
+          body: null,
+        },
+        children: [
+          { id: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp].[Name]', label: 'Name', value: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp].[Name]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp].[Code]', label: 'Code', value: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp].[Code]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp].[LastChangeUserDtm]', label: 'LastChangeUserDtm', value: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp].[LastChangeUserDtm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp].[LastChangeUserNm]', label: 'LastChangeUserNm', value: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp].[LastChangeUserNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp].[MemberCd]', label: 'MemberCd', value: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp].[MemberCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp].[SnOPMktSwimlaneGrp]', label: 'SnOPMktSwimlaneGrp', value: '[SnOPDemandProduct].[SnOPMktSwimlaneGrp].[SnOPMktSwimlaneGrp]', propertiesCallback: null },
+        ],
+      },
+      { id: '[SnOPDemandProduct].[SnOPPerformanceClass]', label: 'SnOPPerformanceClass', value: '[SnOPDemandProduct].[SnOPPerformanceClass]', propertiesCallback: null },
+      {
+        id: '[SnOPDemandProduct].[SnOPPkgAbbrev]',
+        label: 'SnOPPkgAbbrev',
+        value: '[SnOPDemandProduct].[SnOPPkgAbbrev]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_PackageAbbreviation/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[SnOPDemandProduct].[SnOPPkgAbbrev]' },
+          httpMethod: 'GET',
+          body: null,
+        },
+        children: [
+          { id: '[SnOPDemandProduct].[SnOPPkgAbbrev].[Name]', label: 'Name', value: '[SnOPDemandProduct].[SnOPPkgAbbrev].[Name]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPPkgAbbrev].[Code]', label: 'Code', value: '[SnOPDemandProduct].[SnOPPkgAbbrev].[Code]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPPkgAbbrev].[LastChangeUserDtm]', label: 'LastChangeUserDtm', value: '[SnOPDemandProduct].[SnOPPkgAbbrev].[LastChangeUserDtm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPPkgAbbrev].[LastChangeUserNm]', label: 'LastChangeUserNm', value: '[SnOPDemandProduct].[SnOPPkgAbbrev].[LastChangeUserNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPPkgAbbrev].[MemberCd]', label: 'MemberCd', value: '[SnOPDemandProduct].[SnOPPkgAbbrev].[MemberCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPPkgAbbrev].[SnOPPkgAbbrev]', label: 'SnOPPkgAbbrev', value: '[SnOPDemandProduct].[SnOPPkgAbbrev].[SnOPPkgAbbrev]', propertiesCallback: null },
+        ],
+      },
+      { id: '[SnOPDemandProduct].[SnOPPkgFunctionalType]', label: 'SnOPPkgFunctionalType', value: '[SnOPDemandProduct].[SnOPPkgFunctionalType]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[SnOPProcess]', label: 'SnOPProcess', value: '[SnOPDemandProduct].[SnOPProcess]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[SnOPProcessNode]', label: 'SnOPProcessNode', value: '[SnOPDemandProduct].[SnOPProcessNode]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[SnOPProductGenSeries]', label: 'SnOPProductGenSeries', value: '[SnOPDemandProduct].[SnOPProductGenSeries]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[SnOPProductGenSeriesGrp]', label: 'SnOPProductGenSeriesGrp', value: '[SnOPDemandProduct].[SnOPProductGenSeriesGrp]', propertiesCallback: null },
+      {
+        id: '[SnOPDemandProduct].[SnOPProductType]',
+        label: 'SnOPProductType',
+        value: '[SnOPDemandProduct].[SnOPProductType]',
+        propertiesCallback: {
+          dataKey: 'data',
+          path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_ProductType/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+          parameters: { pathString: '[SnOPDemandProduct].[SnOPProductType]' },
+          httpMethod: 'GET',
+          body: null,
+        },
+        children: [
+          { id: '[SnOPDemandProduct].[SnOPProductType].[Name]', label: 'Name', value: '[SnOPDemandProduct].[SnOPProductType].[Name]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPProductType].[Code]', label: 'Code', value: '[SnOPDemandProduct].[SnOPProductType].[Code]', propertiesCallback: null },
+          {
+            id: '[SnOPDemandProduct].[SnOPProductType].[CompanyInd]',
+            label: 'CompanyInd',
+            value: '[SnOPDemandProduct].[SnOPProductType].[CompanyInd]',
+            propertiesCallback: {
+              dataKey: 'data',
+              path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Company_Indicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+              parameters: { pathString: '[SnOPDemandProduct].[SnOPProductType].[CompanyInd]' },
+              httpMethod: 'GET',
+              body: null,
+            },
+            children: [
+              { id: '[SnOPDemandProduct].[SnOPProductType].[CompanyInd].[Name]', label: 'Name', value: '[SnOPDemandProduct].[SnOPProductType].[CompanyInd].[Name]', propertiesCallback: null },
+              { id: '[SnOPDemandProduct].[SnOPProductType].[CompanyInd].[Code]', label: 'Code', value: '[SnOPDemandProduct].[SnOPProductType].[CompanyInd].[Code]', propertiesCallback: null },
+              { id: '[SnOPDemandProduct].[SnOPProductType].[CompanyInd].[CompanyInd]', label: 'CompanyInd', value: '[SnOPDemandProduct].[SnOPProductType].[CompanyInd].[CompanyInd]', propertiesCallback: null },
+            ],
+          },
+          { id: '[SnOPDemandProduct].[SnOPProductType].[DqConstVal]', label: 'DqConstVal', value: '[SnOPDemandProduct].[SnOPProductType].[DqConstVal]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPProductType].[LastChangeUserDtm]', label: 'LastChangeUserDtm', value: '[SnOPDemandProduct].[SnOPProductType].[LastChangeUserDtm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPProductType].[LastChangeUserNm]', label: 'LastChangeUserNm', value: '[SnOPDemandProduct].[SnOPProductType].[LastChangeUserNm]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPProductType].[MemberCd]', label: 'MemberCd', value: '[SnOPDemandProduct].[SnOPProductType].[MemberCd]', propertiesCallback: null },
+          { id: '[SnOPDemandProduct].[SnOPProductType].[SnOPProductType]', label: 'SnOPProductType', value: '[SnOPDemandProduct].[SnOPProductType].[SnOPProductType]', propertiesCallback: null },
+        ],
+      },
+      { id: '[SnOPDemandProduct].[SnOPRevenueProduct]', label: 'SnOPRevenueProduct', value: '[SnOPDemandProduct].[SnOPRevenueProduct]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[SnOPStorageCapacity]', label: 'SnOPStorageCapacity', value: '[SnOPDemandProduct].[SnOPStorageCapacity]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[SnOPWayness]', label: 'SnOPWayness', value: '[SnOPDemandProduct].[SnOPWayness]', propertiesCallback: null },
+      { id: '[SnOPDemandProduct].[VariantIteration]', label: 'VariantIteration', value: '[SnOPDemandProduct].[VariantIteration]', propertiesCallback: null },
+    ],
+  },
+  { id: '[SnOPDemandProductId]', label: 'SnOPDemandProductId', value: '[SnOPDemandProductId]', propertiesCallback: null },
+  { id: '[SnOPPerformanceProfile]', label: 'SnOPPerformanceProfile', value: '[SnOPPerformanceProfile]', propertiesCallback: null },
+  {
+    id: '[SnOPPostSiBOMInd]',
+    label: 'SnOPPostSiBOMInd',
+    value: '[SnOPPostSiBOMInd]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[SnOPPostSiBOMInd]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [
+      { id: '[SnOPPostSiBOMInd].[Name]', label: 'Name', value: '[SnOPPostSiBOMInd].[Name]', propertiesCallback: null },
+      { id: '[SnOPPostSiBOMInd].[Code]', label: 'Code', value: '[SnOPPostSiBOMInd].[Code]', propertiesCallback: null },
+    ],
+  },
+  { id: '[SnOPSiBOMID]', label: 'SnOPSiBOMID', value: '[SnOPSiBOMID]', propertiesCallback: null },
+  { id: '[SnOPSupplyProduct]', label: 'SnOPSupplyProduct', value: '[SnOPSupplyProduct]', propertiesCallback: null },
+  { id: '[SnOPSupplyShortNm]', label: 'SnOPSupplyShortNm', value: '[SnOPSupplyShortNm]', propertiesCallback: null },
+  {
+    id: '[SnOPWaferFOCd]',
+    label: 'SnOPWaferFOCd',
+    value: '[SnOPWaferFOCd]',
+    propertiesCallback: {
+      dataKey: 'data',
+      path: 'https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_WaferFOCode/propertyMetadata?pathString={pathString}&isDataQualityExpression=true',
+      parameters: { pathString: '[SnOPWaferFOCd]' },
+      httpMethod: 'GET',
+      body: null,
+    },
+    children: [
+      { id: '[SnOPWaferFOCd].[Name]', label: 'Name', value: '[SnOPWaferFOCd].[Name]', propertiesCallback: null },
+      { id: '[SnOPWaferFOCd].[Code]', label: 'Code', value: '[SnOPWaferFOCd].[Code]', propertiesCallback: null },
+      { id: '[SnOPWaferFOCd].[DqConstVal]', label: 'DqConstVal', value: '[SnOPWaferFOCd].[DqConstVal]', propertiesCallback: null },
+      { id: '[SnOPWaferFOCd].[LastChangeUserDtm]', label: 'LastChangeUserDtm', value: '[SnOPWaferFOCd].[LastChangeUserDtm]', propertiesCallback: null },
+      { id: '[SnOPWaferFOCd].[LastChangeUserNm]', label: 'LastChangeUserNm', value: '[SnOPWaferFOCd].[LastChangeUserNm]', propertiesCallback: null },
+      { id: '[SnOPWaferFOCd].[MemberCd]', label: 'MemberCd', value: '[SnOPWaferFOCd].[MemberCd]', propertiesCallback: null },
+      { id: '[SnOPWaferFOCd].[SnOPWaferFOCd]', label: 'SnOPWaferFOCd', value: '[SnOPWaferFOCd].[SnOPWaferFOCd]', propertiesCallback: null },
+    ],
+  },
+];
+
+// ─── Attribute Catalog Registry ───────────────────────────────────
+
+/** All available attribute catalogs keyed by name */
+export const ATTRIBUTE_CATALOGS: Record<AttributeCatalogKey, AttributeCatalogEntry> = {
+  product: { key: 'product', label: 'Product', catalog: CATALOG_PRODUCT },
+  supplyProduct: { key: 'supplyProduct', label: 'Supply Product', catalog: CATALOG_SUPPLY_PRODUCT },
+};
+
+export const ATTRIBUTE_CATALOG_KEYS = Object.keys(ATTRIBUTE_CATALOGS) as AttributeCatalogKey[];
+
+/** Default / backwards-compat alias */
+export const ATTRIBUTE_CATALOG = CATALOG_PRODUCT;
+
 // ─── Flat attribute list (for search) ─────────────────────────────
 
 /** Flat list entry for attribute search */
@@ -738,7 +1251,7 @@ export interface FlatAttribute {
 }
 
 /** Recursively flatten the attribute catalog into a searchable list */
-function flattenAttributes(nodes: AttributeNode[]): FlatAttribute[] {
+export function flattenAttributes(nodes: AttributeNode[]): FlatAttribute[] {
   const result: FlatAttribute[] = [];
   function walk(list: AttributeNode[], depth: number) {
     for (const node of list) {
@@ -750,7 +1263,7 @@ function flattenAttributes(nodes: AttributeNode[]): FlatAttribute[] {
   return result;
 }
 
-/** Pre-computed flat list of all attributes for search */
+/** Pre-computed flat list of all attributes for search (default catalog) */
 export const FLAT_ATTRIBUTES: FlatAttribute[] = flattenAttributes(ATTRIBUTE_CATALOG);
 
 // ─── Drag & Drop ──────────────────────────────────────────────────

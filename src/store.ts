@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { Block, BlockConfig, DragItem, ExpressionMode } from './types';
-import { FUNCTION_REGISTRY } from './types';
+import type { Block, BlockConfig, DragItem, ExpressionMode, AttributeCatalogKey, AttributeNode, FlatAttribute } from './types';
+import { FUNCTION_REGISTRY, ATTRIBUTE_CATALOGS, flattenAttributes } from './types';
 
 // ─── Helper: Generate unique IDs ─────────────────────────────────
 let counter = 100;
@@ -223,7 +223,13 @@ interface ExpressionState {
   generatedCodes: string[];       // generated code per block
   isConstraint: boolean;           // global "Is Constraint" flag
 
+  // Attribute catalog
+  activeCatalogKey: AttributeCatalogKey;
+  activeCatalog: AttributeNode[];
+  flatAttributes: FlatAttribute[];
+
   // Actions
+  setActiveCatalog: (key: AttributeCatalogKey) => void;
   setScenario: (key: ScenarioKey) => void;
   setBlockConfigs: (configs: BlockConfig[]) => void;
   setIsConstraint: (value: boolean) => void;
@@ -245,10 +251,11 @@ interface ExpressionState {
 
 const INITIAL_SCENARIO: ScenarioKey = 'validIf';
 const INITIAL_CONFIGS = SCENARIOS[INITIAL_SCENARIO].configs;
-const INITIAL_ROOTS: (Block | null)[] = INITIAL_CONFIGS.map((cfg, i) =>
-  i === 0 ? getDemoForMode(cfg.expressionMode) : null,
-);
+const INITIAL_ROOTS: (Block | null)[] = INITIAL_CONFIGS.map(() => null);
 const INITIAL_CODES: string[] = INITIAL_ROOTS.map((r) => generateCode(r));
+const INITIAL_CATALOG_KEY: AttributeCatalogKey = 'product';
+const INITIAL_CATALOG = ATTRIBUTE_CATALOGS[INITIAL_CATALOG_KEY].catalog;
+const INITIAL_FLAT = flattenAttributes(INITIAL_CATALOG);
 
 /** Immutably update one root in the array and regenerate its code */
 function patchRoot(
@@ -265,6 +272,19 @@ function patchRoot(
 }
 
 export const useExpressionStore = create<ExpressionState>((set, get) => ({
+  activeCatalogKey: INITIAL_CATALOG_KEY,
+  activeCatalog: INITIAL_CATALOG,
+  flatAttributes: INITIAL_FLAT,
+
+  setActiveCatalog: (key) => {
+    const entry = ATTRIBUTE_CATALOGS[key];
+    set({
+      activeCatalogKey: key,
+      activeCatalog: entry.catalog,
+      flatAttributes: flattenAttributes(entry.catalog),
+    });
+  },
+
   scenario: INITIAL_SCENARIO,
   blockConfigs: INITIAL_CONFIGS,
   roots: INITIAL_ROOTS,
