@@ -588,40 +588,53 @@ function FunctionBlock({ block }: { block: Block }) {
       {/* Args Slots */}
       {!block.isCollapsed && (
         <div className="flex flex-col gap-2 p-3">
-          {block.args.map((arg, index) => (
-            <div key={arg?.id ?? `slot-${block.id}-${index}`}>
-              <div className="flex items-center gap-1 mb-1">
-                <div className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
-                  {argLabels[index] ?? `String ${index + 1}`}
+          {block.args.map((arg, index) => {
+            const variadicStart = meta?.variadicFrom ?? 0;
+            const isInVariadicRange = isVariadic && index >= variadicStart;
+            const variadicSlotCount = block.args.length - variadicStart;
+            const variadicSlotNum = index - variadicStart + 1;
+
+            return (
+              <div key={arg?.id ?? `slot-${block.id}-${index}`}>
+                <div className="flex items-center gap-1 mb-1">
+                  <div className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+                    {isInVariadicRange
+                      ? `Value ${variadicSlotNum}`
+                      : (argLabels[index] ?? `Arg ${index + 1}`)
+                    }
+                  </div>
+                  {isInVariadicRange && variadicSlotCount > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeArgSlot(block.id, index);
+                      }}
+                      className="ml-auto p-0.5 rounded hover:bg-red-100 transition-colors group/rm"
+                      title="Remove this slot"
+                    >
+                      <Minus
+                        size={10}
+                        className="text-slate-300 group-hover/rm:text-red-500"
+                      />
+                    </button>
+                  )}
                 </div>
-                {isVariadic && block.args.length > 1 && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeArgSlot(block.id, index);
-                    }}
-                    className="ml-auto p-0.5 rounded hover:bg-red-100 transition-colors group/rm"
-                    title="Remove this slot"
-                  >
-                    <Minus
-                      size={10}
-                      className="text-slate-300 group-hover/rm:text-red-500"
-                    />
-                  </button>
+                {arg ? (
+                  <BlockRenderer block={arg} />
+                ) : (
+                  <DropZone
+                    parentId={block.id}
+                    slotIndex={index}
+                    label={isInVariadicRange
+                      ? `Value ${variadicSlotNum}`
+                      : (argLabels[index] ?? `Arg ${index + 1}`)
+                    }
+                    suggestions={meta?.argSuggestions?.[index]}
+                  />
                 )}
               </div>
-              {arg ? (
-                <BlockRenderer block={arg} />
-              ) : (
-                <DropZone
-                  parentId={block.id}
-                  slotIndex={index}
-                  label={argLabels[index] ?? `String ${index + 1}`}
-                  suggestions={meta?.argSuggestions?.[index]}
-                />
-              )}
-            </div>
-          ))}
+            );
+          })}
           {/* Add slot button for variadic functions */}
           {isVariadic && (
             <button
@@ -638,7 +651,7 @@ function FunctionBlock({ block }: { block: Block }) {
               "
             >
               <Plus size={12} />
-              <span>Add argument</span>
+              <span>Add value</span>
             </button>
           )}
         </div>

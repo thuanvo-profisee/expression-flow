@@ -277,7 +277,7 @@ function CustomValueInput() {
       <div className="flex flex-wrap gap-1">
         {(
           [
-            ['""', '""'],
+            ['""', 'EMPTY'],
             ['" "', "SPACE"],
             ["0", "0"],
             ["1", "1"],

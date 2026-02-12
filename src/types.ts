@@ -37,6 +37,8 @@ export interface FunctionMeta {
   subcategory: FunctionSubcategory;
   isInfix?: boolean;
   variadic?: boolean;
+  /** Index from which variadic add/remove applies (default 0). Use to protect leading fixed args. */
+  variadicFrom?: number;
   /** Per-argument suggested literal values, keyed by arg index */
   argSuggestions?: Record<number, string[]>;
 }
@@ -272,19 +274,23 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
   // ━━ SET OPERATIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   IN: {
     name: 'IN', label: 'IN',
-    argLabels: ['Attribute', 'Values'],
+    argLabels: ['Attribute', 'Value 1', 'Value 2'],
     description: 'Value is in the list',
     details: "Syntax: <attribute> IN (List of Values | <attribute>)\n\nCompares whether an attribute value is in any one of the listed values or attribute's values. Can compare current, changed, or prior values.\n\nParameters:\n• attribute — The attribute to check\n• values — List of values or another attribute",
     color: 'lime', category: 'function', subcategory: 'set',
     isInfix: true,
+    variadic: true,
+    variadicFrom: 1,
   },
   'NOT IN': {
     name: 'NOT IN', label: 'NOT IN',
-    argLabels: ['Attribute', 'Values'],
+    argLabels: ['Attribute', 'Value 1', 'Value 2'],
     description: 'Value is not in the list',
     details: "Syntax: <attribute> NOT IN (List of Values | <attribute>)\n\nCompares whether an attribute value is not in any one of the listed values or attribute's values. Can compare current, changed, or prior values.\n\nParameters:\n• attribute — The attribute to check\n• values — List of values or another attribute",
     color: 'lime', category: 'function', subcategory: 'set',
     isInfix: true,
+    variadic: true,
+    variadicFrom: 1,
   },
 
   // ━━ COMPARISON OPERATORS (infix) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

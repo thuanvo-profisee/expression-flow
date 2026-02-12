@@ -96,6 +96,15 @@ export function generateCode(block: Block | null): string {
     return `(${inner})`;
   }
 
+  // Infix + variadic (IN / NOT IN): Left OP (val1, val2, ...)
+  if (meta?.isInfix && meta?.variadic) {
+    const left = generateCode(block.args[0]);
+    const listItems = block.args.slice(meta.variadicFrom ?? 1)
+      .filter(Boolean)
+      .map((a) => generateCode(a));
+    return `${left} ${block.name} (${listItems.join(', ')})`;
+  }
+
   // Infix operators: Left OP Right
   if (meta?.isInfix) {
     const left = generateCode(block.args[0]);
@@ -322,7 +331,9 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
     set((state) => {
       if (!state.root) return state;
       const newRoot = updateInTree(state.root, blockId, (b) => {
-        if (b.args.length <= 1) return b; // keep at least 1 slot
+        const meta = FUNCTION_REGISTRY[b.name];
+        const minSlots = (meta?.variadicFrom ?? 0) + 1; // keep at least fixed args + 1 variadic
+        if (b.args.length <= minSlots) return b;
         const newArgs = [...b.args];
         newArgs.splice(slotIndex, 1);
         return { ...b, args: newArgs };
