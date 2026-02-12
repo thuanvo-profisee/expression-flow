@@ -21,6 +21,7 @@ import {
   ToggleLeft,
   CircleOff,
   Search,
+  Copy,
 } from "lucide-react";
 import type { Block } from "../types";
 import { FUNCTION_REGISTRY } from "../types";
@@ -142,6 +143,7 @@ function parseAttributeSegments(path: string): string[] {
 function AttributePill({ block }: { block: Block }) {
   const removeBlock = useExpressionStore((s) => s.removeBlock);
   const updateBlockName = useExpressionStore((s) => s.updateBlockName);
+  const copyBlock = useExpressionStore((s) => s.copyBlock);
   const flatAttributes = useExpressionStore((s) => s.flatAttributes);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -290,10 +292,23 @@ function AttributePill({ block }: { block: Block }) {
           <button
             onClick={(e) => {
               e.stopPropagation();
+              copyBlock(block.id);
+            }}
+            className="
+              opacity-0 group-hover:opacity-100
+              hover:text-blue-500 transition-opacity duration-150
+            "
+            title="Copy"
+          >
+            <Copy size={12} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
               removeBlock(block.id);
             }}
             className="
-              ml-1 opacity-0 group-hover:opacity-100
+              opacity-0 group-hover:opacity-100
               hover:text-red-500 transition-opacity duration-150
             "
           >
@@ -450,6 +465,7 @@ function LiteralIcon({
 function LiteralPill({ block }: { block: Block }) {
   const removeBlock = useExpressionStore((s) => s.removeBlock);
   const updateBlockValue = useExpressionStore((s) => s.updateBlockValue);
+  const copyBlock = useExpressionStore((s) => s.copyBlock);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(block.value ?? '""');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -533,10 +549,23 @@ function LiteralPill({ block }: { block: Block }) {
       <button
         onClick={(e) => {
           e.stopPropagation();
+          copyBlock(block.id);
+        }}
+        className="
+          opacity-0 group-hover:opacity-100
+          hover:text-blue-500 transition-opacity duration-150 shrink-0
+        "
+        title="Copy"
+      >
+        <Copy size={12} />
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
           removeBlock(block.id);
         }}
         className="
-          ml-1 opacity-0 group-hover:opacity-100
+          opacity-0 group-hover:opacity-100
           hover:text-red-500 transition-opacity duration-150 shrink-0
         "
       >
@@ -550,6 +579,7 @@ function LiteralPill({ block }: { block: Block }) {
 
 function FunctionBlock({ block }: { block: Block }) {
   const removeBlock = useExpressionStore((s) => s.removeBlock);
+  const copyBlock = useExpressionStore((s) => s.copyBlock);
   const toggleCollapse = useExpressionStore((s) => s.toggleCollapse);
   const addArgSlot = useExpressionStore((s) => s.addArgSlot);
   const removeArgSlot = useExpressionStore((s) => s.removeArgSlot);
@@ -606,6 +636,19 @@ function FunctionBlock({ block }: { block: Block }) {
           </span>
         )}
         <div className="flex-1" />
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            copyBlock(block.id);
+          }}
+          className="p-0.5 hover:bg-blue-100 rounded transition-colors group/cp"
+          title="Copy"
+        >
+          <Copy
+            size={14}
+            className="text-slate-400 group-hover/cp:text-blue-500"
+          />
+        </button>
         <button
           onClick={(e) => {
             e.stopPropagation();

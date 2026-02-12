@@ -6,6 +6,7 @@ import {
   Trash2,
   Plus,
   BookOpen,
+  Clipboard,
 } from 'lucide-react';
 import type { Block, BlockConfig, DragItem } from '../types';
 import { EXPRESSION_MODE_META } from '../types';
@@ -17,6 +18,8 @@ import { BlockRenderer } from './BlockRenderer';
 function RootDropZone({ config, rootIndex }: { config: BlockConfig; rootIndex: number }) {
   const [isDragOver, setIsDragOver] = useState(false);
   const setRootFromDrop = useExpressionStore((s) => s.setRootFromDrop);
+  const clipboard = useExpressionStore((s) => s.clipboard);
+  const pasteToRoot = useExpressionStore((s) => s.pasteToRoot);
   const modeMeta = EXPRESSION_MODE_META[config.expressionMode];
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -57,7 +60,7 @@ function RootDropZone({ config, rootIndex }: { config: BlockConfig; rootIndex: n
       className={`
         flex flex-col items-center justify-center gap-3
         min-h-[140px] rounded-xl border-2 border-dashed
-        transition-all duration-200 select-none
+        transition-all duration-200 select-none p-3
         ${
           isDragOver
             ? 'border-indigo-400 bg-indigo-50/80 scale-[1.01]'
@@ -84,6 +87,26 @@ function RootDropZone({ config, rootIndex }: { config: BlockConfig; rootIndex: n
       <div className="text-[10px] text-slate-300 mt-1">
         e.g. {modeMeta.example}
       </div>
+      {clipboard && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            pasteToRoot(rootIndex);
+          }}
+          className="
+            mt-1 flex items-center gap-1.5
+            px-3 py-1.5 rounded-full
+            bg-blue-100 border border-blue-300 text-blue-600
+            hover:bg-blue-200 hover:text-blue-700
+            text-xs font-medium
+            transition-all duration-150
+          "
+          title="Paste from clipboard"
+        >
+          <Clipboard size={12} />
+          Paste
+        </button>
+      )}
     </div>
   );
 }

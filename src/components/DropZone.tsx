@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Clipboard } from 'lucide-react';
 import { useExpressionStore } from '../store';
 import type { DragItem } from '../types';
 
@@ -15,6 +15,8 @@ export function DropZone({ parentId, slotIndex, label, suggestions }: DropZonePr
   const [isDragOver, setIsDragOver] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const addBlock = useExpressionStore((s) => s.addBlock);
+  const clipboard = useExpressionStore((s) => s.clipboard);
+  const pasteToSlot = useExpressionStore((s) => s.pasteToSlot);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -84,6 +86,26 @@ export function DropZone({ parentId, slotIndex, label, suggestions }: DropZonePr
             <span className="ml-1 flex items-center gap-0.5 text-teal-500">
               {showSuggestions ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
             </span>
+          )}
+          {clipboard && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                pasteToSlot(parentId, slotIndex);
+              }}
+              className="
+                ml-1 flex items-center gap-1
+                px-2 py-0.5 rounded-full
+                bg-blue-100 border border-blue-300 text-blue-600
+                hover:bg-blue-200 hover:text-blue-700
+                text-[10px] font-medium
+                transition-all duration-150
+              "
+              title="Paste from clipboard"
+            >
+              <Clipboard size={10} />
+              Paste
+            </button>
           )}
         </div>
       </div>

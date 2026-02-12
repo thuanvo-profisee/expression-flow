@@ -127,6 +127,24 @@ function findRootIndex(roots: (Block | null)[], blockId: string): number {
   return roots.findIndex(search);
 }
 
+/** Find a block by ID in any root */
+function findBlockById(roots: (Block | null)[], blockId: string): Block | null {
+  const search = (node: Block | null): Block | null => {
+    if (!node) return null;
+    if (node.id === blockId) return node;
+    for (const arg of node.args) {
+      const found = search(arg);
+      if (found) return found;
+    }
+    return null;
+  };
+  for (const root of roots) {
+    const found = search(root);
+    if (found) return found;
+  }
+  return null;
+}
+
 // ─── Demo Data ───────────────────────────────────────────────────
 
 /** Validation demo: [Code] = CONCAT([Class].[Name], [Color].[Name]) */
@@ -228,8 +246,14 @@ interface ExpressionState {
   activeCatalog: AttributeNode[];
   flatAttributes: FlatAttribute[];
 
+  // Clipboard
+  clipboard: Block | null;
+
   // Actions
   setActiveCatalog: (key: AttributeCatalogKey) => void;
+  copyBlock: (blockId: string) => void;
+  pasteToSlot: (parentId: string, slotIndex: number) => void;
+  pasteToRoot: (rootIndex: number) => void;
   setScenario: (key: ScenarioKey) => void;
   setBlockConfigs: (configs: BlockConfig[]) => void;
   setIsConstraint: (value: boolean) => void;
@@ -276,6 +300,8 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
   activeCatalog: INITIAL_CATALOG,
   flatAttributes: INITIAL_FLAT,
 
+  clipboard: null,
+
   setActiveCatalog: (key) => {
     const entry = ATTRIBUTE_CATALOGS[key];
     set({
@@ -283,6 +309,40 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
       activeCatalog: entry.catalog,
       flatAttributes: flattenAttributes(entry.catalog),
     });
+  },
+
+  copyBlock: (blockId) => {
+    const { roots } = get();
+    const block = findBlockById(roots, blockId);
+    if (block) {
+      set({ clipboard: block });
+    }
+  },
+
+  pasteToSlot: (parentId, slotIndex) => {
+    const { clipboard } = get();
+    if (!clipboard) return;
+    const cloned = cloneBlock(clipboard);
+    if (!cloned) return;
+    set((state) => {
+      const idx = findRootIndex(state.roots, parentId);
+      if (idx === -1) return state;
+      const root = state.roots[idx]!;
+      const newRoot = updateInTree(root, parentId, (parent) => {
+        const newArgs = [...parent.args];
+        newArgs[slotIndex] = cloned;
+        return { ...parent, args: newArgs };
+      });
+      return patchRoot(state.roots, state.generatedCodes, idx, newRoot);
+    });
+  },
+
+  pasteToRoot: (rootIndex) => {
+    const { clipboard, roots, generatedCodes } = get();
+    if (!clipboard) return;
+    const cloned = cloneBlock(clipboard);
+    if (!cloned) return;
+    set(patchRoot(roots, generatedCodes, rootIndex, cloned));
   },
 
   scenario: INITIAL_SCENARIO,
