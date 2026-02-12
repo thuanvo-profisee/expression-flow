@@ -10,10 +10,16 @@ import {
     ChevronDown,
     GripVertical,
     Binary,
+    ListTree,
+    Braces,
 } from "lucide-react";
-import type { DragItem, AttributeNode } from "../types";
-import { ATTRIBUTE_CATALOGS, ATTRIBUTE_CATALOG_KEYS } from "../types";
-import { useExpressionStore, generateCode } from "../store";
+import type { DragItem, AttributeNode, Block } from "../types";
+import {
+    ATTRIBUTE_CATALOGS,
+    ATTRIBUTE_CATALOG_KEYS,
+    FUNCTION_REGISTRY,
+} from "../types";
+import { useExpressionStore, generateCode, panToBlock } from "../store";
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -356,6 +362,281 @@ function CollapsibleSection({
     );
 }
 
+// ─── Expression Tree View ───────────────────────────────────────
+
+/** Color map for function categories (matches BlockRenderer palette) */
+const TREE_COLORS: Record<string, string> = {
+    indigo: "text-indigo-600 bg-indigo-50 border-indigo-200",
+    rose: "text-rose-600 bg-rose-50 border-rose-200",
+    purple: "text-purple-600 bg-purple-50 border-purple-200",
+    pink: "text-pink-600 bg-pink-50 border-pink-200",
+    sky: "text-sky-600 bg-sky-50 border-sky-200",
+    teal: "text-teal-600 bg-teal-50 border-teal-200",
+    violet: "text-violet-600 bg-violet-50 border-violet-200",
+    orange: "text-orange-600 bg-orange-50 border-orange-200",
+    lime: "text-lime-600 bg-lime-50 border-lime-200",
+    emerald: "text-emerald-600 bg-emerald-50 border-emerald-200",
+    amber: "text-amber-600 bg-amber-50 border-amber-200",
+    slate: "text-slate-600 bg-slate-50 border-slate-200",
+};
+
+function getNodeLabel(block: Block): string {
+    if (block.type === "ATTRIBUTE") return block.name;
+    if (block.type === "LITERAL") return block.value ?? '""';
+    const meta = FUNCTION_REGISTRY[block.name];
+    return meta?.label ?? block.name;
+}
+
+function getNodeStyle(block: Block): string {
+    if (block.type === "ATTRIBUTE")
+        return "text-blue-600 bg-blue-50 border-blue-200";
+    if (block.type === "LITERAL")
+        return "text-green-700 bg-green-50 border-green-200";
+    const meta = FUNCTION_REGISTRY[block.name];
+    return TREE_COLORS[meta?.color ?? "slate"] ?? TREE_COLORS.slate;
+}
+
+function getNodeIcon(block: Block) {
+    if (block.type === "ATTRIBUTE")
+        return <Hash size={9} className="shrink-0 opacity-70" />;
+    if (block.type === "LITERAL")
+        return <Type size={9} className="shrink-0 opacity-70" />;
+    return <Braces size={9} className="shrink-0 opacity-70" />;
+}
+
+function ExpressionTreeNode({
+    block,
+    depth,
+    argLabel,
+}: {
+    block: Block;
+    depth: number;
+    argLabel?: string;
+}) {
+    const [expanded, setExpanded] = useState(depth < 2);
+    const focusBlock = useExpressionStore((s) => s.focusBlock);
+    const focusedBlockId = useExpressionStore((s) => s.focusedBlockId);
+    const filledArgs = block.args.filter(Boolean) as Block[];
+    const hasChildren =
+        block.type === "FUNCTION" && filledArgs.length > 0;
+    const meta = FUNCTION_REGISTRY[block.name];
+    const isActive = focusedBlockId === block.id;
+
+    const handleClick = useCallback(() => {
+        focusBlock(block.id);
+        // Small delay so the highlight renders before panning
+        requestAnimationFrame(() => panToBlock(block.id));
+    }, [block.id, focusBlock]);
+
+    return (
+        <div>
+            <div
+                className="flex items-center gap-1 group"
+                style={{ paddingLeft: `${depth * 14}px` }}
+            >
+                {/* Expand toggle */}
+                {hasChildren ? (
+                    <button
+                        onClick={() => setExpanded(!expanded)}
+                        className="p-0.5 rounded hover:bg-slate-200/60 transition-colors shrink-0"
+                    >
+                        {expanded ? (
+                            <ChevronDown
+                                size={10}
+                                className="text-slate-400"
+                            />
+                        ) : (
+                            <ChevronRight
+                                size={10}
+                                className="text-slate-400"
+                            />
+                        )}
+                    </button>
+                ) : (
+                    <span className="w-[18px] shrink-0" />
+                )}
+
+                {/* Arg label (e.g. "Condition", "Left") */}
+                {argLabel && (
+                    <span className="text-[8px] text-slate-400 shrink-0 w-[52px] truncate text-right mr-0.5">
+                        {argLabel}
+                    </span>
+                )}
+
+                {/* Node pill — clickable to focus on canvas */}
+                <button
+                    onClick={handleClick}
+                    className={`
+                        inline-flex items-center gap-1 px-1.5 py-0.5
+                        rounded border text-[10px] font-medium leading-tight
+                        max-w-[180px] truncate
+                        cursor-pointer transition-all duration-150
+                        ${getNodeStyle(block)}
+                        ${isActive ? "ring-2 ring-orange-400 ring-offset-1" : "hover:brightness-95"}
+                    `}
+                    title={`Click to focus — ${
+                        block.type === "FUNCTION"
+                            ? `${block.name}(${filledArgs.length} args)`
+                            : getNodeLabel(block)
+                    }`}
+                >
+                    {getNodeIcon(block)}
+                    <span className="truncate">
+                        {getNodeLabel(block)}
+                    </span>
+                </button>
+
+                {/* Children count badge */}
+                {hasChildren && !expanded && (
+                    <span className="text-[8px] text-slate-400 ml-0.5">
+                        ({filledArgs.length})
+                    </span>
+                )}
+            </div>
+
+            {/* Children */}
+            {hasChildren && expanded && (
+                <div className="mt-0.5 space-y-0.5">
+                    {block.args.map((arg, i) => {
+                        if (!arg) return null;
+                        const label =
+                            meta?.argLabels[i] ??
+                            (meta?.variadic
+                                ? `${meta?.argLabels[0]?.replace(
+                                      /\s*\d+$/,
+                                      "",
+                                  )} ${i + 1}`
+                                : undefined);
+                        return (
+                            <ExpressionTreeNode
+                                key={arg.id}
+                                block={arg}
+                                depth={depth + 1}
+                                argLabel={label}
+                            />
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function ExpressionTreeView({ root }: { root: Block | null }) {
+    if (!root) {
+        return (
+            <div className="text-[10px] text-slate-300 italic px-1 py-2">
+                Empty expression
+            </div>
+        );
+    }
+    return (
+        <div className="bg-white border border-slate-200 rounded-lg p-2 overflow-auto max-h-60 space-y-0.5">
+            <ExpressionTreeNode block={root} depth={0} />
+        </div>
+    );
+}
+
+// ─── Generated Panel with Code / Tree toggle ───────────────────
+
+type GeneratedViewMode = "code" | "tree";
+
+function GeneratedPanel({
+    roots,
+    blockConfigs,
+}: {
+    roots: (Block | null)[];
+    blockConfigs: { name: string; expressionMode: string }[];
+}) {
+    const [viewMode, setViewMode] = useState<GeneratedViewMode>("code");
+
+    return (
+        <div className="border-t border-slate-200 bg-slate-50">
+            {/* Header with toggle */}
+            <div className="flex items-center gap-1.5 px-3 py-2">
+                <Code2 size={12} className="text-slate-500" />
+                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                    Generated
+                </span>
+                {/* View mode toggle */}
+                <div className="ml-auto flex items-center gap-0.5 p-0.5 bg-slate-200/60 rounded-md">
+                    <button
+                        onClick={() => setViewMode("code")}
+                        className={`
+                            flex items-center gap-1 px-1.5 py-0.5 rounded
+                            text-[9px] font-semibold transition-all duration-150
+                            ${
+                                viewMode === "code"
+                                    ? "bg-white text-slate-700 shadow-sm"
+                                    : "text-slate-400 hover:text-slate-600"
+                            }
+                        `}
+                        title="Code view"
+                    >
+                        <Code2 size={9} />
+                        Code
+                    </button>
+                    <button
+                        onClick={() => setViewMode("tree")}
+                        className={`
+                            flex items-center gap-1 px-1.5 py-0.5 rounded
+                            text-[9px] font-semibold transition-all duration-150
+                            ${
+                                viewMode === "tree"
+                                    ? "bg-white text-slate-700 shadow-sm"
+                                    : "text-slate-400 hover:text-slate-600"
+                            }
+                        `}
+                        title="Tree view"
+                    >
+                        <ListTree size={9} />
+                        Tree
+                    </button>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-3 pb-3 space-y-2">
+                {roots.map((root, idx) => {
+                    const cfg = blockConfigs[idx];
+                    const isValidation =
+                        cfg?.expressionMode === "validation";
+                    return (
+                        <div key={idx}>
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                                <span className="text-[9px] font-semibold text-slate-400 truncate">
+                                    {cfg?.name ??
+                                        `Expression ${idx + 1}`}
+                                </span>
+                                <span
+                                    className={`
+                                        text-[8px] font-semibold px-1 py-0.5 rounded shrink-0
+                                        ${
+                                            isValidation
+                                                ? "bg-amber-100 text-amber-600"
+                                                : "bg-indigo-100 text-indigo-600"
+                                        }
+                                    `}
+                                >
+                                    {isValidation ? "bool" : "value"}
+                                </span>
+                            </div>
+
+                            {viewMode === "code" ? (
+                                <pre className="text-[10px] text-slate-600 bg-white border border-slate-200 rounded-lg p-2 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-24 overflow-y-auto">
+                                    {generateCode(root)}
+                                </pre>
+                            ) : (
+                                <ExpressionTreeView root={root} />
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
 // ─── Attributes Panel (Right) ───────────────────────────────────
 
 const MIN_WIDTH = 250;
@@ -511,45 +792,7 @@ export function AttributesPanel() {
             </div>
 
             {/* Generated Code Panel */}
-            <div className="border-t border-slate-200 bg-slate-50">
-                <div className="flex items-center gap-1.5 px-3 py-2">
-                    <Code2 size={12} className="text-slate-500" />
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                        Generated
-                    </span>
-                </div>
-                <div className="px-3 pb-3 space-y-2">
-                    {roots.map((root, idx) => {
-                        const cfg = blockConfigs[idx];
-                        const isValidation =
-                            cfg?.expressionMode === "validation";
-                        return (
-                            <div key={idx}>
-                                <div className="flex items-center gap-1.5 mb-0.5">
-                                    <span className="text-[9px] font-semibold text-slate-400 truncate">
-                                        {cfg?.name ?? `Expression ${idx + 1}`}
-                                    </span>
-                                    <span
-                                        className={`
-                      text-[8px] font-semibold px-1 py-0.5 rounded shrink-0
-                      ${
-                          isValidation
-                              ? "bg-amber-100 text-amber-600"
-                              : "bg-indigo-100 text-indigo-600"
-                      }
-                    `}
-                                    >
-                                        {isValidation ? "bool" : "value"}
-                                    </span>
-                                </div>
-                                <pre className="text-[10px] text-slate-600 bg-white border border-slate-200 rounded-lg p-2 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-24 overflow-y-auto">
-                                    {generateCode(root)}
-                                </pre>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
+            <GeneratedPanel roots={roots} blockConfigs={blockConfigs} />
         </div>
     );
 }

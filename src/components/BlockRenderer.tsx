@@ -260,9 +260,17 @@ function AttributePill({ block }: { block: Block }) {
         return `${parentSegments[0]} › … › ${parentSegments[parentSegments.length - 1]}`;
     }, [parentSegments]);
 
+    const isFocused = useExpressionStore(
+        (s) => s.focusedBlockId === block.id,
+    );
+
     return (
         <>
-            <div ref={pillRef} className="inline-block">
+            <div
+                ref={pillRef}
+                className="inline-block"
+                data-block-id={block.id}
+            >
                 <div
                     draggable={!isSearchOpen}
                     onDragStart={handleDragStart}
@@ -281,6 +289,7 @@ function AttributePill({ block }: { block: Block }) {
             hover:bg-blue-200 hover:shadow-sm
             transition-all duration-150
             ${isSearchOpen ? "ring-2 ring-blue-400" : ""}
+            ${isFocused ? "ring-2 ring-orange-400 ring-offset-1 animate-pulse" : ""}
           `}
                 >
                     <Hash size={12} className="text-blue-400 shrink-0" />
@@ -530,8 +539,13 @@ function LiteralPill({ block }: { block: Block }) {
         [commitEdit, block.value],
     );
 
+    const isFocused = useExpressionStore(
+        (s) => s.focusedBlockId === block.id,
+    );
+
     return (
         <div
+            data-block-id={block.id}
             draggable={!isEditing}
             onDragStart={handleDragStart}
             className={`
@@ -541,6 +555,7 @@ function LiteralPill({ block }: { block: Block }) {
         cursor-grab active:cursor-grabbing
         hover:shadow-sm transition-all duration-150
         ${styles.pill}
+        ${isFocused ? "ring-2 ring-orange-400 ring-offset-1 animate-pulse" : ""}
       `}
         >
             <LiteralIcon type={litType} />
@@ -606,6 +621,9 @@ function FunctionBlock({ block }: { block: Block }) {
     const toggleCollapse = useExpressionStore((s) => s.toggleCollapse);
     const addArgSlot = useExpressionStore((s) => s.addArgSlot);
     const removeArgSlot = useExpressionStore((s) => s.removeArgSlot);
+    const isFocused = useExpressionStore(
+        (s) => s.focusedBlockId === block.id,
+    );
     const meta = FUNCTION_REGISTRY[block.name];
     const colors = getColors(block.name);
     const argLabels =
@@ -616,11 +634,13 @@ function FunctionBlock({ block }: { block: Block }) {
 
     return (
         <div
+            data-block-id={block.id}
             className={`
         rounded-xl border-2 ${colors.border} ${colors.bg}
         shadow-sm hover:shadow-md
         transition-shadow duration-200
         overflow-hidden
+        ${isFocused ? "ring-2 ring-orange-400 ring-offset-1 animate-pulse" : ""}
       `}
         >
             {/* Header */}

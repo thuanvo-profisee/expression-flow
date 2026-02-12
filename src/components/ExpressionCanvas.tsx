@@ -12,7 +12,7 @@ import {
     BackgroundVariant,
 } from "@xyflow/react";
 import { ChevronDown, ChevronUp, Settings2 } from "lucide-react";
-import { useExpressionStore } from "../store";
+import { useExpressionStore, setReactFlowInstance } from "../store";
 import type { Block, BlockConfig } from "../types";
 import { RootNode } from "./RootNode";
 
@@ -107,6 +107,7 @@ export function ExpressionCanvas() {
                 nodeTypes={nodeTypes}
                 onNodesChange={onNodesChange}
                 onDragOver={onDragOver}
+                onInit={setReactFlowInstance}
                 fitView
                 fitViewOptions={{ padding: 0.3 }}
                 minZoom={0.1}

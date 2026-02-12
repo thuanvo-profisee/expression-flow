@@ -13,6 +13,37 @@ import {
     ATTRIBUTE_CATALOGS,
     flattenAttributes,
 } from "./types";
+import type { ReactFlowInstance } from "@xyflow/react";
+
+// ─── ReactFlow instance holder (for programmatic panning) ────────
+
+let _rfInstance: ReactFlowInstance | null = null;
+
+/** Called from ExpressionCanvas onInit to store the instance */
+export function setReactFlowInstance(instance: ReactFlowInstance) {
+    _rfInstance = instance;
+}
+
+/** Pan the ReactFlow viewport so the given block is centered on screen */
+export function panToBlock(blockId: string) {
+    const el = document.querySelector(
+        `[data-block-id="${blockId}"]`,
+    ) as HTMLElement | null;
+    if (!el || !_rfInstance) return;
+
+    const rect = el.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    const flowPos = _rfInstance.screenToFlowPosition({
+        x: centerX,
+        y: centerY,
+    });
+    _rfInstance.setCenter(flowPos.x, flowPos.y, {
+        duration: 400,
+        zoom: 1.0,
+    });
+}
 
 // ─── Helper: Generate unique IDs ─────────────────────────────────
 let counter = 100;
@@ -294,7 +325,11 @@ interface ExpressionState {
     // Clipboard
     clipboard: Block | null;
 
+    // Focus (for tree-view navigation)
+    focusedBlockId: string | null;
+
     // Actions
+    focusBlock: (blockId: string | null) => void;
     setActiveCatalog: (key: AttributeCatalogKey) => void;
     copyBlock: (blockId: string) => void;
     pasteToSlot: (parentId: string, slotIndex: number) => void;
@@ -348,6 +383,20 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
     activeCatalogKey: INITIAL_CATALOG_KEY,
     activeCatalog: INITIAL_CATALOG,
     flatAttributes: INITIAL_FLAT,
+
+    focusedBlockId: null,
+    focusBlock: (blockId) => {
+        set({ focusedBlockId: blockId });
+        if (blockId) {
+            // Auto-clear highlight after 2 seconds
+            setTimeout(() => {
+                // Only clear if it's still the same block
+                if (get().focusedBlockId === blockId) {
+                    set({ focusedBlockId: null });
+                }
+            }, 2000);
+        }
+    },
 
     clipboard: null,
 
