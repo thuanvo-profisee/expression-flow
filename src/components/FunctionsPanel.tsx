@@ -22,7 +22,6 @@ import {
 import type {
   DragItem,
   FunctionMeta,
-  FunctionSubcategory,
   ExpressionMode,
 } from "../types";
 import {
@@ -215,51 +214,20 @@ function FunctionCard({ meta }: { meta: FunctionMeta }) {
   );
 }
 
-// ─── Operator chip ──────────────────────────────────────────────
-
-function OperatorChip({ meta }: { meta: FunctionMeta }) {
-  const item: DragItem = { type: "FUNCTION", name: meta.name };
-
-  return (
-    <div className="flex flex-col items-center gap-0.5">
-      <DraggableItem item={item}>
-        <div
-          className="
-            flex items-center justify-center
-            min-w-[36px] h-9 px-2 rounded-md
-            bg-white border border-slate-200
-            hover:border-emerald-300 hover:shadow-sm
-            transition-all duration-150
-            font-mono font-bold text-sm text-slate-700
-            hover:text-emerald-700
-          "
-        >
-          {meta.label}
-        </div>
-      </DraggableItem>
-      {meta.details && <InfoButton meta={meta} />}
-    </div>
-  );
-}
-
 // ─── Collapsible Section ────────────────────────────────────────
 
 function Section({
-  subcategory,
   label,
   iconName,
   functions,
   defaultOpen = true,
 }: {
-  subcategory: FunctionSubcategory;
   label: string;
   iconName: string;
   functions: FunctionMeta[];
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
-  const isOperatorGrid =
-    subcategory === "comparison" || subcategory === "arithmetic";
 
   return (
     <div>
@@ -274,20 +242,13 @@ function Section({
           {functions.length}
         </span>
       </button>
-      {open &&
-        (isOperatorGrid ? (
-          <div className="flex flex-wrap gap-1 mb-2">
-            {functions.map((m) => (
-              <OperatorChip key={m.name} meta={m} />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-1 mb-2">
-            {functions.map((m) => (
-              <FunctionCard key={m.name} meta={m} />
-            ))}
-          </div>
-        ))}
+      {open && (
+        <div className="space-y-1 mb-2">
+          {functions.map((m) => (
+            <FunctionCard key={m.name} meta={m} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -386,7 +347,6 @@ export function FunctionsPanel() {
           return (
             <Section
               key={key}
-              subcategory={key}
               label={label}
               iconName={icon}
               functions={funcs}

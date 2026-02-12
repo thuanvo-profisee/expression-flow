@@ -57,11 +57,11 @@ export function ExpressionCanvas() {
           showInteractive={false}
           className="!bg-white !border-slate-200 !shadow-lg !rounded-xl"
         />
-        <MiniMap
+        {/* <MiniMap
           nodeColor="#6366f1"
           maskColor="rgba(241, 245, 249, 0.7)"
           className="!bg-white !border-slate-200 !shadow-lg !rounded-xl"
-        />
+        /> */}
       </ReactFlow>
     </div>
   );

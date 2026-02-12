@@ -555,7 +555,7 @@ function FunctionBlock({ block }: { block: Block }) {
         </button>
         {isOperator ? (
           <span className={`font-bold text-base ${colors.text} font-mono`}>
-            {displayLabel}
+            {block.name}
           </span>
         ) : (
           <>

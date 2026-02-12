@@ -280,20 +280,10 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     color: 'lime', category: 'function', subcategory: 'set',
     isInfix: true,
   },
-  'NOT IN': {
-    name: 'NOT IN', label: 'NOT IN',
-    argLabels: ['Attribute', 'Values'],
-    description: 'Value is not in the list',
-    details: "Syntax: <attribute> NOT IN (List of Values | <attribute>)\n\nCompares whether an attribute value is not in any one of the listed values or attribute's values. Can compare current, changed, or prior values.\n\nParameters:\n• attribute — The attribute to check\n• values — Use ( ) grouping to provide a list of values",
-    color: 'lime', category: 'function', subcategory: 'set',
-    isInfix: true,
-    variadic: true,
-    variadicFrom: 1,
-  },
 
   // ━━ COMPARISON OPERATORS (infix) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   '>': {
-    name: '>', label: '>',
+    name: '>', label: 'Greater than >',
     argLabels: ['Left', 'Right'],
     description: 'Greater than',
     details: 'Syntax: <left> > <right>\n\nReturns true if the left expression is greater than the right expression.',
@@ -301,7 +291,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '<': {
-    name: '<', label: '<',
+    name: '<', label: 'Less than  <',
     argLabels: ['Left', 'Right'],
     description: 'Less than',
     details: 'Syntax: <left> < <right>\n\nReturns true if the left expression is less than the right expression.',
@@ -309,7 +299,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '>=': {
-    name: '>=', label: '>=',
+    name: '>=', label: 'Greater or equal  >=',
     argLabels: ['Left', 'Right'],
     description: 'Greater or equal',
     details: 'Syntax: <left> >= <right>\n\nReturns true if the left expression is greater than or equal to the right expression.',
@@ -317,7 +307,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '<=': {
-    name: '<=', label: '<=',
+    name: '<=', label: 'Less or equal  <=',
     argLabels: ['Left', 'Right'],
     description: 'Less or equal',
     details: 'Syntax: <left> <= <right>\n\nReturns true if the left expression is less than or equal to the right expression.',
@@ -325,7 +315,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '<>': {
-    name: '<>', label: '<>',
+    name: '<>', label: 'Not equal  <>',
     argLabels: ['Left', 'Right'],
     description: 'Not equal to',
     details: 'Syntax: <left> <> <right>\n\nReturns true if the left expression is not equal to the right expression.',
@@ -333,7 +323,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '=': {
-    name: '=', label: '=',
+    name: '=', label: 'Equal  =',
     argLabels: ['Left', 'Right'],
     description: 'Equal to',
     details: 'Syntax: <left> = <right>\n\nReturns true if the left expression equals the right expression.',
@@ -343,39 +333,44 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
 
   // ━━ ARITHMETIC OPERATORS (infix) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   '+': {
-    name: '+', label: '+',
+    name: '+', label: 'Add  +',
     argLabels: ['Left', 'Right'],
     description: 'Addition',
+    details: 'Syntax: <left> + <right>\n\nReturns the sum of the left and right expressions.',
     color: 'amber', category: 'arithmetic', subcategory: 'arithmetic',
     isInfix: true,
   },
   '-': {
-    name: '-', label: '-',
+    name: '-', label: 'Subtract  -',
     argLabels: ['Left', 'Right'],
     description: 'Subtraction',
+    details: 'Syntax: <left> - <right>\n\nReturns the difference of the left and right expressions.',
     color: 'amber', category: 'arithmetic', subcategory: 'arithmetic',
     isInfix: true,
   },
   '*': {
-    name: '*', label: '*',
+    name: '*', label: 'Multiply  *',
     argLabels: ['Left', 'Right'],
     description: 'Multiplication',
+    details: 'Syntax: <left> * <right>\n\nReturns the product of the left and right expressions.',
     color: 'amber', category: 'arithmetic', subcategory: 'arithmetic',
     isInfix: true,
   },
   '/': {
-    name: '/', label: '/',
+    name: '/', label: 'Divide  /',
     argLabels: ['Left', 'Right'],
     description: 'Division',
+    details: 'Syntax: <left> / <right>\n\nReturns the quotient of the left and right expressions.',
     color: 'amber', category: 'arithmetic', subcategory: 'arithmetic',
     isInfix: true,
   },
 
   // ━━ GROUPING ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   GROUP: {
-    name: 'GROUP', label: '( )',
+    name: 'GROUP', label: 'LIST ( )',
     argLabels: ['Item 1'],
     description: 'Parentheses grouping / value list',
+    details: 'Syntax: ( <item1>, <item2>, ..., <itemN> )\n\nReturns a list of the items provided. Can be used to group multiple items together or as a value list.',
     color: 'slate', category: 'grouping', subcategory: 'grouping',
     variadic: true,
   },
