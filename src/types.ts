@@ -67,10 +67,12 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
         argLabels: ["Condition 1", "Condition 2"],
         description: "Logical AND",
         details:
-            "Syntax: AND(<condition1>, <condition2>)\n\nReturns true only when both conditions are true.\n\nParameters:\n• condition1 — First boolean expression\n• condition2 — Second boolean expression",
+            "Syntax: <condition1> AND <condition2> AND ...\n\nReturns true only when all conditions are true. Add more conditions as needed.",
         color: "rose",
         category: "function",
         subcategory: "logic",
+        isInfix: true,
+        variadic: true,
     },
     OR: {
         name: "OR",
@@ -78,10 +80,12 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
         argLabels: ["Condition 1", "Condition 2"],
         description: "Logical OR",
         details:
-            "Syntax: OR(<condition1>, <condition2>)\n\nReturns true when at least one condition is true.\n\nParameters:\n• condition1 — First boolean expression\n• condition2 — Second boolean expression",
+            "Syntax: <condition1> OR <condition2> OR ...\n\nReturns true when at least one condition is true. Add more conditions as needed.",
         color: "purple",
         category: "function",
         subcategory: "logic",
+        isInfix: true,
+        variadic: true,
     },
     NOT: {
         name: "NOT",

@@ -8,9 +8,9 @@
 //   • Literals:       "hello", 42, TRUE, FALSE, NULL
 //   • Functions:      IF(...), CONCAT(...), LENGTH(...)
 //   • 0-arg funcs:    NOW, TODAY, NEWGUID
-//   • Infix ops:      =, <>, >, <, >=, <=, +, -, *, /, IN
+//   • Infix ops:      =, <>, >, <, >=, <=, +, -, *, /, IN, AND, OR
 //   • Grouping:       (a, b, c)  → GROUP block
-//   • Precedence:     *, / > +, - > comparisons > IN
+//   • Precedence:     *, / > +, - > comparisons > IN > AND > OR
 // ─────────────────────────────────────────────────────────────────
 
 import type { Block } from "./types";
@@ -166,9 +166,10 @@ function tokenize(input: string): Token[] {
             const start = i;
             while (i < len && /[a-zA-Z0-9_$]/.test(input[i])) i++;
             const word = input.substring(start, i);
-            // IN is a special infix operator
-            if (word.toUpperCase() === "IN") {
-                tokens.push({ type: "OP", value: "IN", pos: start });
+            const upper = word.toUpperCase();
+            // AND, OR, IN are infix operators
+            if (upper === "AND" || upper === "OR" || upper === "IN") {
+                tokens.push({ type: "OP", value: upper, pos: start });
             } else {
                 tokens.push({ type: "IDENT", value: word, pos: start });
             }
@@ -186,22 +187,26 @@ function tokenize(input: string): Token[] {
 
 function getOperatorPrecedence(op: string): number {
     switch (op) {
-        case "IN":
+        case "OR":
             return 1;
+        case "AND":
+            return 2;
+        case "IN":
+            return 3;
         case "=":
         case "<>":
         case ">":
         case "<":
         case ">=":
         case "<=":
-            return 2;
+            return 4;
         case "&":
         case "+":
         case "-":
-            return 3;
+            return 5;
         case "*":
         case "/":
-            return 4;
+            return 6;
         default:
             return -1;
     }

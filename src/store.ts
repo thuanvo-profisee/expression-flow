@@ -41,7 +41,7 @@ export function panToBlock(blockId: string) {
     });
     _rfInstance.setCenter(flowPos.x, flowPos.y, {
         duration: 400,
-        zoom: 1.0,
+        zoom: 1.5,
     });
 }
 
