@@ -12,6 +12,8 @@ import {
     Binary,
     ListTree,
     Braces,
+    Maximize2,
+    Minimize2,
 } from "lucide-react";
 import type { DragItem, AttributeNode, Block } from "../types";
 import {
@@ -522,7 +524,7 @@ function ExpressionTreeNode({
     );
 }
 
-function ExpressionTreeView({ root }: { root: Block | null }) {
+function ExpressionTreeView({ root, expanded }: { root: Block | null; expanded?: boolean }) {
     if (!root) {
         return (
             <div className="text-[10px] text-slate-300 italic px-1 py-2">
@@ -531,7 +533,9 @@ function ExpressionTreeView({ root }: { root: Block | null }) {
         );
     }
     return (
-        <div className="bg-white border border-slate-200 rounded-lg p-2 overflow-auto max-h-60 space-y-0.5">
+        <div className={`bg-white border border-slate-200 rounded-lg p-2 overflow-auto space-y-0.5 ${
+            expanded ? "" : "max-h-60"
+        }`}>
             <ExpressionTreeNode block={root} depth={0} />
         </div>
     );
@@ -544,22 +548,40 @@ type GeneratedViewMode = "code" | "tree";
 function GeneratedPanel({
     roots,
     blockConfigs,
+    isExpanded,
+    onToggleExpand,
 }: {
     roots: (Block | null)[];
     blockConfigs: { name: string; expressionMode: string }[];
+    isExpanded: boolean;
+    onToggleExpand: () => void;
 }) {
     const [viewMode, setViewMode] = useState<GeneratedViewMode>("code");
 
     return (
-        <div className="border-t border-slate-200 bg-slate-50">
+        <div className={`border-t border-slate-200 bg-slate-50 ${
+            isExpanded ? "flex-1 flex flex-col overflow-hidden" : ""
+        }`}>
             {/* Header with toggle */}
             <div className="flex items-center gap-1.5 px-3 py-2">
                 <Code2 size={12} className="text-slate-500" />
                 <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                     Generated
                 </span>
+                {/* Expand / collapse button */}
+                <button
+                    onClick={onToggleExpand}
+                    className="ml-auto p-1 rounded hover:bg-slate-200/80 transition-colors group/exp"
+                    title={isExpanded ? "Collapse panel" : "Expand to full panel"}
+                >
+                    {isExpanded ? (
+                        <Minimize2 size={12} className="text-slate-400 group-hover/exp:text-slate-600" />
+                    ) : (
+                        <Maximize2 size={12} className="text-slate-400 group-hover/exp:text-slate-600" />
+                    )}
+                </button>
                 {/* View mode toggle */}
-                <div className="ml-auto flex items-center gap-0.5 p-0.5 bg-slate-200/60 rounded-md">
+                <div className="flex items-center gap-0.5 p-0.5 bg-slate-200/60 rounded-md">
                     <button
                         onClick={() => setViewMode("code")}
                         className={`
@@ -596,7 +618,9 @@ function GeneratedPanel({
             </div>
 
             {/* Content */}
-            <div className="px-3 pb-3 space-y-2">
+            <div className={`px-3 pb-3 space-y-2 ${
+                isExpanded ? "flex-1 overflow-y-auto sidebar-scroll" : ""
+            }`}>
                 {roots.map((root, idx) => {
                     const cfg = blockConfigs[idx];
                     const isValidation =
@@ -623,11 +647,13 @@ function GeneratedPanel({
                             </div>
 
                             {viewMode === "code" ? (
-                                <pre className="text-[10px] text-slate-600 bg-white border border-slate-200 rounded-lg p-2 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-24 overflow-y-auto">
+                                <pre className={`text-[10px] text-slate-600 bg-white border border-slate-200 rounded-lg p-2 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto ${
+                                    isExpanded ? "" : "max-h-24"
+                                }`}>
                                     {generateCode(root)}
                                 </pre>
                             ) : (
-                                <ExpressionTreeView root={root} />
+                                <ExpressionTreeView root={root} expanded={isExpanded} />
                             )}
                         </div>
                     );
@@ -651,6 +677,7 @@ export function AttributesPanel() {
     const setActiveCatalog = useExpressionStore((s) => s.setActiveCatalog);
     const [search, setSearch] = useState("");
     const lowerSearch = search.toLowerCase().trim();
+    const [generatedExpanded, setGeneratedExpanded] = useState(false);
 
     const [width, setWidth] = useState(DEFAULT_WIDTH);
     const isResizing = useRef(false);
@@ -711,88 +738,97 @@ export function AttributesPanel() {
                 </h2>
             </div>
 
-            {/* Entity / Catalog Picker */}
-            <div className="px-3 py-2 border-b border-slate-200 bg-slate-50/80">
-                <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Entity
-                </div>
-                <div className="flex gap-0.5 p-0.5 bg-slate-200/60 rounded-lg">
-                    {ATTRIBUTE_CATALOG_KEYS.map((key) => {
-                        const entry = ATTRIBUTE_CATALOGS[key];
-                        const isActive = activeCatalogKey === key;
-                        return (
-                            <button
-                                key={key}
-                                onClick={() => setActiveCatalog(key)}
-                                className={`
-                  flex-1 flex items-center justify-center gap-1
-                  px-2 py-1.5 rounded-md text-[10px] font-semibold
-                  transition-all duration-200
-                  ${
-                      isActive
-                          ? "bg-white text-blue-700 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700 hover:bg-white/40"
-                  }
-                `}
-                            >
-                                {entry.label}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto sidebar-scroll p-3 space-y-4">
-                {/* Custom Value — collapsible */}
-                <CollapsibleSection
-                    icon={<Plus size={10} />}
-                    label="Custom Value"
-                    defaultOpen
-                >
-                    <CustomValueInput />
-                </CollapsibleSection>
-
-                {/* Break line */}
-                <div className="h-px bg-slate-200 w-full" />
-
-                {/* Search */}
-                <div className="relative">
-                    <Search
-                        size={12}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search attributes..."
-                        className="w-full pl-7 pr-2 py-1.5 text-xs rounded-md border border-slate-200 bg-slate-50 text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-300"
-                    />
-                </div>
-
-                {/* Data Attributes Tree — collapsible */}
-                <CollapsibleSection
-                    icon={<Database size={10} />}
-                    label="Attributes"
-                    count={activeCatalog.length}
-                    defaultOpen
-                >
-                    <div className="space-y-1">
-                        {activeCatalog.map((node) => (
-                            <AttributeTreeNode
-                                key={node.id}
-                                node={node}
-                                depth={0}
-                                search={lowerSearch}
-                            />
-                        ))}
+            {/* Entity / Catalog Picker — hidden when generated panel is expanded */}
+            {!generatedExpanded && (
+                <div className="px-3 py-2 border-b border-slate-200 bg-slate-50/80">
+                    <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                        Entity
                     </div>
-                </CollapsibleSection>
-            </div>
+                    <div className="flex gap-0.5 p-0.5 bg-slate-200/60 rounded-lg">
+                        {ATTRIBUTE_CATALOG_KEYS.map((key) => {
+                            const entry = ATTRIBUTE_CATALOGS[key];
+                            const isActive = activeCatalogKey === key;
+                            return (
+                                <button
+                                    key={key}
+                                    onClick={() => setActiveCatalog(key)}
+                                    className={`
+                      flex-1 flex items-center justify-center gap-1
+                      px-2 py-1.5 rounded-md text-[10px] font-semibold
+                      transition-all duration-200
+                      ${
+                          isActive
+                              ? "bg-white text-blue-700 shadow-sm"
+                              : "text-slate-500 hover:text-slate-700 hover:bg-white/40"
+                      }
+                    `}
+                                >
+                                    {entry.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* Scrollable content — hidden when generated panel is expanded */}
+            {!generatedExpanded && (
+                <div className="flex-1 overflow-y-auto sidebar-scroll p-3 space-y-4">
+                    {/* Custom Value — collapsible */}
+                    <CollapsibleSection
+                        icon={<Plus size={10} />}
+                        label="Custom Value"
+                        defaultOpen
+                    >
+                        <CustomValueInput />
+                    </CollapsibleSection>
+
+                    {/* Break line */}
+                    <div className="h-px bg-slate-200 w-full" />
+
+                    {/* Search */}
+                    <div className="relative">
+                        <Search
+                            size={12}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"
+                        />
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search attributes..."
+                            className="w-full pl-7 pr-2 py-1.5 text-xs rounded-md border border-slate-200 bg-slate-50 text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-300"
+                        />
+                    </div>
+
+                    {/* Data Attributes Tree — collapsible */}
+                    <CollapsibleSection
+                        icon={<Database size={10} />}
+                        label="Attributes"
+                        count={activeCatalog.length}
+                        defaultOpen
+                    >
+                        <div className="space-y-1">
+                            {activeCatalog.map((node) => (
+                                <AttributeTreeNode
+                                    key={node.id}
+                                    node={node}
+                                    depth={0}
+                                    search={lowerSearch}
+                                />
+                            ))}
+                        </div>
+                    </CollapsibleSection>
+                </div>
+            )}
 
             {/* Generated Code Panel */}
-            <GeneratedPanel roots={roots} blockConfigs={blockConfigs} />
+            <GeneratedPanel
+                roots={roots}
+                blockConfigs={blockConfigs}
+                isExpanded={generatedExpanded}
+                onToggleExpand={() => setGeneratedExpanded((v) => !v)}
+            />
         </div>
     );
 }
