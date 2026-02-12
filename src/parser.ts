@@ -117,7 +117,7 @@ function tokenize(input: string): Token[] {
         }
 
         // ── Single-char operators (except -) ──
-        if ("=><+*/".includes(ch)) {
+        if ("=><+*/&".includes(ch)) {
             tokens.push({ type: "OP", value: ch, pos: i });
             i++;
             continue;
@@ -195,6 +195,7 @@ function getOperatorPrecedence(op: string): number {
         case ">=":
         case "<=":
             return 2;
+        case "&":
         case "+":
         case "-":
             return 3;
@@ -477,6 +478,58 @@ class ExpressionParser {
     }
 }
 
+// ─── Post-processing: flatten variadic infix chains ─────────────
+
+/**
+ * Operators that are both infix and variadic (e.g. `&`).
+ * After parsing, nested binary trees of these operators are flattened
+ * into a single block with many args + a trailing null slot.
+ */
+const VARIADIC_INFIX = new Set(
+    Object.values(FUNCTION_REGISTRY)
+        .filter((m) => m.isInfix && m.variadic)
+        .map((m) => m.name),
+);
+
+/** Recursively flatten variadic-infix chains into single blocks. */
+function flattenVariadicInfix(block: Block): Block {
+    // Recurse into all children first
+    const args = block.args.map((a) =>
+        a ? flattenVariadicInfix(a) : null,
+    );
+
+    if (
+        block.type !== "FUNCTION" ||
+        !VARIADIC_INFIX.has(block.name)
+    ) {
+        return { ...block, args };
+    }
+
+    // Collect all chained operands of the same operator
+    const operands: (Block | null)[] = [];
+    function collect(node: Block | null) {
+        if (
+            node &&
+            node.type === "FUNCTION" &&
+            node.name === block.name
+        ) {
+            for (const child of node.args) {
+                collect(child);
+            }
+        } else {
+            operands.push(node);
+        }
+    }
+    collect({ ...block, args });
+
+    // Keep non-null operands, add trailing null for the variadic "add" slot
+    const filled = operands.filter(Boolean) as Block[];
+    return {
+        ...block,
+        args: [...filled, null],
+    };
+}
+
 // ─── Public API ──────────────────────────────────────────────────
 
 /**
@@ -492,5 +545,6 @@ export function parseExpressionToBlock(input: string): Block | null {
     if (tokens.length === 0) return null;
 
     const parser = new ExpressionParser(tokens);
-    return parser.parse();
+    const tree = parser.parse();
+    return flattenVariadicInfix(tree);
 }

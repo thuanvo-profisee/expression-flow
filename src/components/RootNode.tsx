@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useRef, useEffect } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import {
     ShieldCheck,
@@ -64,8 +64,37 @@ function ImportExpressionArea({
         }
     };
 
+    // Stop wheel / pointer events from reaching ReactFlow so that
+    // scrolling, text-selection and textarea-resize work without
+    // accidentally dragging the node or zooming the canvas.
+    const containerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const stopWheel = (e: WheelEvent) => e.stopPropagation();
+        const stopPointer = (e: PointerEvent | MouseEvent) =>
+            e.stopPropagation();
+
+        el.addEventListener("wheel", stopWheel, {
+            capture: true,
+            passive: false,
+        });
+        el.addEventListener("pointerdown", stopPointer, { capture: true });
+        el.addEventListener("mousedown", stopPointer, { capture: true });
+        return () => {
+            el.removeEventListener("wheel", stopWheel, { capture: true });
+            el.removeEventListener("pointerdown", stopPointer, {
+                capture: true,
+            });
+            el.removeEventListener("mousedown", stopPointer, {
+                capture: true,
+            });
+        };
+    }, []);
+
     return (
         <div
+            ref={containerRef}
             className={`
       border-x-2 px-4 py-3 space-y-2.5
       bg-gradient-to-b from-slate-50 to-white

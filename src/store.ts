@@ -108,6 +108,12 @@ export function generateCode(block: Block | null): string {
         return `(${items.join(", ")})`;
     }
 
+    // Variadic infix operators (e.g. &): val1 OP val2 OP val3 ...
+    if (meta?.isInfix && meta?.variadic) {
+        const filled = block.args.filter(Boolean).map((a) => generateCode(a));
+        return filled.join(` ${block.name} `);
+    }
+
     // Infix operators: Left OP Right
     if (meta?.isInfix) {
         const left = generateCode(block.args[0]);

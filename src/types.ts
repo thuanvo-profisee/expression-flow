@@ -546,6 +546,19 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
         subcategory: "arithmetic",
         isInfix: true,
     },
+    "&": {
+        name: "&",
+        label: "&",
+        argLabels: ["Value 1", "Value 2"],
+        description: "String concatenation",
+        details:
+            "Syntax: <value1> & <value2> & ...\n\nConcatenates two or more expressions as strings. Add more values as needed.",
+        color: "sky",
+        category: "arithmetic",
+        subcategory: "string",
+        isInfix: true,
+        variadic: true,
+    },
 
     // ━━ GROUPING ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     GROUP: {
