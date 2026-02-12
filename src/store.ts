@@ -90,19 +90,10 @@ export function generateCode(block: Block | null): string {
     return block.name;
   }
 
-  // GROUP — parentheses wrapper
+  // GROUP — parentheses wrapper (supports multiple items as a list)
   if (block.name === 'GROUP') {
-    const inner = generateCode(block.args[0]);
-    return `(${inner})`;
-  }
-
-  // Infix + variadic (IN / NOT IN): Left OP (val1, val2, ...)
-  if (meta?.isInfix && meta?.variadic) {
-    const left = generateCode(block.args[0]);
-    const listItems = block.args.slice(meta.variadicFrom ?? 1)
-      .filter(Boolean)
-      .map((a) => generateCode(a));
-    return `${left} ${block.name} (${listItems.join(', ')})`;
+    const items = block.args.filter(Boolean).map((a) => generateCode(a));
+    return `(${items.join(', ')})`;
   }
 
   // Infix operators: Left OP Right

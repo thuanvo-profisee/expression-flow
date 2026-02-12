@@ -274,19 +274,17 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
   // ━━ SET OPERATIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   IN: {
     name: 'IN', label: 'IN',
-    argLabels: ['Attribute', 'Value 1', 'Value 2'],
+    argLabels: ['Attribute', 'Values'],
     description: 'Value is in the list',
-    details: "Syntax: <attribute> IN (List of Values | <attribute>)\n\nCompares whether an attribute value is in any one of the listed values or attribute's values. Can compare current, changed, or prior values.\n\nParameters:\n• attribute — The attribute to check\n• values — List of values or another attribute",
+    details: "Syntax: <attribute> IN (List of Values | <attribute>)\n\nCompares whether an attribute value is in any one of the listed values or attribute's values. Can compare current, changed, or prior values.\n\nParameters:\n• attribute — The attribute to check\n• values — Use ( ) grouping to provide a list of values",
     color: 'lime', category: 'function', subcategory: 'set',
     isInfix: true,
-    variadic: true,
-    variadicFrom: 1,
   },
   'NOT IN': {
     name: 'NOT IN', label: 'NOT IN',
-    argLabels: ['Attribute', 'Value 1', 'Value 2'],
+    argLabels: ['Attribute', 'Values'],
     description: 'Value is not in the list',
-    details: "Syntax: <attribute> NOT IN (List of Values | <attribute>)\n\nCompares whether an attribute value is not in any one of the listed values or attribute's values. Can compare current, changed, or prior values.\n\nParameters:\n• attribute — The attribute to check\n• values — List of values or another attribute",
+    details: "Syntax: <attribute> NOT IN (List of Values | <attribute>)\n\nCompares whether an attribute value is not in any one of the listed values or attribute's values. Can compare current, changed, or prior values.\n\nParameters:\n• attribute — The attribute to check\n• values — Use ( ) grouping to provide a list of values",
     color: 'lime', category: 'function', subcategory: 'set',
     isInfix: true,
     variadic: true,
@@ -376,9 +374,10 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
   // ━━ GROUPING ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   GROUP: {
     name: 'GROUP', label: '( )',
-    argLabels: ['Expression'],
-    description: 'Parentheses grouping',
+    argLabels: ['Item 1'],
+    description: 'Parentheses grouping / value list',
     color: 'slate', category: 'grouping', subcategory: 'grouping',
+    variadic: true,
   },
 };
 
