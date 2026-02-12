@@ -48,14 +48,14 @@ export function ExpressionCanvas() {
         fitView
         fitViewOptions={{ padding: 0.3 }}
         minZoom={0.1}
-        maxZoom={2}
+        maxZoom={1}
         proOptions={{ hideAttribution: true }}
         className="bg-slate-100"
       >
         <Background
           variant={BackgroundVariant.Dots}
           gap={20}
-          size={1}
+          size={2}
           color="#cbd5e1"
         />
         <Controls

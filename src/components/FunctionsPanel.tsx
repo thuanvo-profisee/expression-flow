@@ -220,7 +220,7 @@ function Section({
   label,
   iconName,
   functions,
-  defaultOpen = true,
+  defaultOpen = false,
 }: {
   label: string;
   iconName: string;
@@ -350,9 +350,7 @@ export function FunctionsPanel() {
               label={label}
               iconName={icon}
               functions={funcs}
-              defaultOpen={
-                !lowerSearch ? key === "logic" || key === "comparison" : true
-              }
+              defaultOpen={!!lowerSearch}
             />
           );
         })}
