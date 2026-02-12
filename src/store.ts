@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Block, DragItem, ExpressionMode } from './types';
+import type { Block, BlockConfig, DragItem, ExpressionMode } from './types';
 import { FUNCTION_REGISTRY } from './types';
 
 // ─── Helper: Generate unique IDs ─────────────────────────────────
@@ -115,6 +115,18 @@ export function generateCode(block: Block | null): string {
   return `${block.name}(${argsStr})`;
 }
 
+// ─── Recursive search helper ─────────────────────────────────────
+
+/** Find which root index contains a given block ID */
+function findRootIndex(roots: (Block | null)[], blockId: string): number {
+  const search = (block: Block | null): boolean => {
+    if (!block) return false;
+    if (block.id === blockId) return true;
+    return block.args.some(search);
+  };
+  return roots.findIndex(search);
+}
+
 // ─── Demo Data ───────────────────────────────────────────────────
 
 /** Validation demo: [Code] = CONCAT([Class].[Name], [Color].[Name]) */
@@ -170,16 +182,54 @@ function getDemoForMode(mode: ExpressionMode): Block {
 
 // ─── Store Interface ─────────────────────────────────────────────
 
+// ─── Scenarios ───────────────────────────────────────────────────
+
+export type ScenarioKey = 'validIf' | 'changeTo';
+
+export interface Scenario {
+  key: ScenarioKey;
+  label: string;
+  description: string;
+  configs: BlockConfig[];
+}
+
+export const SCENARIOS: Record<ScenarioKey, Scenario> = {
+  validIf: {
+    key: 'validIf',
+    label: 'Valid If',
+    description: 'Both blocks return boolean',
+    configs: [
+      { name: 'Valid If', expressionMode: 'validation' },
+      { name: 'When', expressionMode: 'validation' },
+    ],
+  },
+  changeTo: {
+    key: 'changeTo',
+    label: 'Change To',
+    description: 'Assignment value with a validation condition',
+    configs: [
+      { name: 'Change to', expressionMode: 'assignment' },
+      { name: 'When', expressionMode: 'validation' },
+    ],
+  },
+};
+
+// ─── Store Interface ─────────────────────────────────────────────
+
 interface ExpressionState {
-  expressionMode: ExpressionMode;
-  root: Block | null;        // null = empty canvas, awaiting first drop
-  generatedCode: string;
+  scenario: ScenarioKey;
+  blockConfigs: BlockConfig[];     // developer-defined block names & return types
+  roots: (Block | null)[];        // expression tree per block
+  generatedCodes: string[];       // generated code per block
+  isConstraint: boolean;           // global "Is Constraint" flag
 
   // Actions
-  setExpressionMode: (mode: ExpressionMode) => void;
-  loadDemo: () => void;
-  setRootFromDrop: (item: DragItem) => void;
-  clearRoot: () => void;
+  setScenario: (key: ScenarioKey) => void;
+  setBlockConfigs: (configs: BlockConfig[]) => void;
+  setIsConstraint: (value: boolean) => void;
+  loadDemo: (rootIndex: number) => void;
+  setRootFromDrop: (rootIndex: number, item: DragItem) => void;
+  clearRoot: (rootIndex: number) => void;
   addBlock: (parentId: string, slotIndex: number, item: DragItem) => void;
   removeBlock: (blockId: string) => void;
   toggleCollapse: (blockId: string) => void;
@@ -188,77 +238,125 @@ interface ExpressionState {
   updateBlockName: (blockId: string, newName: string) => void;
   addArgSlot: (blockId: string) => void;
   removeArgSlot: (blockId: string, slotIndex: number) => void;
-  setRoot: (root: Block | null) => void;
+  setRoot: (rootIndex: number, root: Block | null) => void;
 }
 
 // ─── Zustand Store ───────────────────────────────────────────────
 
-const INITIAL_MODE: ExpressionMode = 'assignment';
-const INITIAL_ROOT = getDemoForMode(INITIAL_MODE);
+const INITIAL_SCENARIO: ScenarioKey = 'validIf';
+const INITIAL_CONFIGS = SCENARIOS[INITIAL_SCENARIO].configs;
+const INITIAL_ROOTS: (Block | null)[] = INITIAL_CONFIGS.map((cfg, i) =>
+  i === 0 ? getDemoForMode(cfg.expressionMode) : null,
+);
+const INITIAL_CODES: string[] = INITIAL_ROOTS.map((r) => generateCode(r));
+
+/** Immutably update one root in the array and regenerate its code */
+function patchRoot(
+  roots: (Block | null)[],
+  codes: string[],
+  idx: number,
+  newRoot: Block | null,
+): { roots: (Block | null)[]; generatedCodes: string[] } {
+  const newRoots = [...roots];
+  const newCodes = [...codes];
+  newRoots[idx] = newRoot;
+  newCodes[idx] = generateCode(newRoot);
+  return { roots: newRoots, generatedCodes: newCodes };
+}
 
 export const useExpressionStore = create<ExpressionState>((set, get) => ({
-  expressionMode: INITIAL_MODE,
-  root: INITIAL_ROOT,
-  generatedCode: generateCode(INITIAL_ROOT),
+  scenario: INITIAL_SCENARIO,
+  blockConfigs: INITIAL_CONFIGS,
+  roots: INITIAL_ROOTS,
+  generatedCodes: INITIAL_CODES,
+  isConstraint: false,
 
-  setExpressionMode: (mode) => {
-    set({ expressionMode: mode });
+  setIsConstraint: (value) => set({ isConstraint: value }),
+
+  setScenario: (key) => {
+    const { configs } = SCENARIOS[key];
+    const { roots, generatedCodes } = get();
+    // Resize roots/codes and preserve existing data where indices match
+    const newRoots = configs.map((_, i) => roots[i] ?? null);
+    const newCodes = configs.map((_, i) => generatedCodes[i] ?? generateCode(null));
+    set({ scenario: key, blockConfigs: configs, roots: newRoots, generatedCodes: newCodes });
   },
 
-  loadDemo: () => {
-    const { expressionMode } = get();
-    const demo = getDemoForMode(expressionMode);
-    set({ root: demo, generatedCode: generateCode(demo) });
+  setBlockConfigs: (configs) => {
+    const { roots, generatedCodes } = get();
+    // Resize roots & codes to match the new number of blocks
+    // — existing data at the same index is preserved
+    const newRoots = configs.map((_, i) => roots[i] ?? null);
+    const newCodes = configs.map((_, i) => generatedCodes[i] ?? generateCode(null));
+    set({ blockConfigs: configs, roots: newRoots, generatedCodes: newCodes });
   },
 
-  setRootFromDrop: (item) => {
+  loadDemo: (rootIndex) => {
+    const { blockConfigs, roots, generatedCodes } = get();
+    const mode = blockConfigs[rootIndex]?.expressionMode ?? 'assignment';
+    const demo = getDemoForMode(mode);
+    set(patchRoot(roots, generatedCodes, rootIndex, demo));
+  },
+
+  setRootFromDrop: (rootIndex, item) => {
     const newBlock = createBlockFromDrag(item);
-    set({ root: newBlock, generatedCode: generateCode(newBlock) });
+    const { roots, generatedCodes } = get();
+    set(patchRoot(roots, generatedCodes, rootIndex, newBlock));
   },
 
-  clearRoot: () => {
-    set({ root: null, generatedCode: '/* empty */' });
+  clearRoot: (rootIndex) => {
+    const { roots, generatedCodes } = get();
+    set(patchRoot(roots, generatedCodes, rootIndex, null));
   },
 
   addBlock: (parentId, slotIndex, item) => {
     const newBlock = createBlockFromDrag(item);
     set((state) => {
-      if (!state.root) return state;
-      const newRoot = updateInTree(state.root, parentId, (parent) => {
+      const idx = findRootIndex(state.roots, parentId);
+      if (idx === -1) return state;
+      const root = state.roots[idx]!;
+      const newRoot = updateInTree(root, parentId, (parent) => {
         const newArgs = [...parent.args];
         newArgs[slotIndex] = newBlock;
         return { ...parent, args: newArgs };
       });
-      return { root: newRoot, generatedCode: generateCode(newRoot) };
+      return patchRoot(state.roots, state.generatedCodes, idx, newRoot);
     });
   },
 
   removeBlock: (blockId) => {
     set((state) => {
-      if (!state.root) return state;
-      // If removing the root block itself, clear the canvas
-      if (state.root.id === blockId) {
-        return { root: null, generatedCode: '/* empty */' };
+      const idx = findRootIndex(state.roots, blockId);
+      if (idx === -1) return state;
+      const root = state.roots[idx]!;
+      // If removing the root block itself, clear that slot
+      if (root.id === blockId) {
+        return patchRoot(state.roots, state.generatedCodes, idx, null);
       }
-      const newRoot = removeFromTree(state.root, blockId);
-      return { root: newRoot, generatedCode: generateCode(newRoot) };
+      const newRoot = removeFromTree(root, blockId);
+      return patchRoot(state.roots, state.generatedCodes, idx, newRoot);
     });
   },
 
   toggleCollapse: (blockId) => {
     set((state) => {
-      if (!state.root) return state;
-      const newRoot = updateInTree(state.root, blockId, (b) => ({
+      const idx = findRootIndex(state.roots, blockId);
+      if (idx === -1) return state;
+      const root = state.roots[idx]!;
+      const newRoot = updateInTree(root, blockId, (b) => ({
         ...b,
         isCollapsed: !b.isCollapsed,
       }));
-      return { root: newRoot, generatedCode: generateCode(newRoot) };
+      return patchRoot(state.roots, state.generatedCodes, idx, newRoot);
     });
   },
 
   moveBlock: (fromId, toParentId, toSlotIndex) => {
     const state = get();
-    if (!state.root) return;
+    const fromIdx = findRootIndex(state.roots, fromId);
+    if (fromIdx === -1) return;
+    const fromRoot = state.roots[fromIdx]!;
+
     const findBlock = (node: Block | null): Block | null => {
       if (!node) return null;
       if (node.id === fromId) return node;
@@ -268,70 +366,100 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
       }
       return null;
     };
-    const blockToMove = findBlock(state.root);
+    const blockToMove = findBlock(fromRoot);
     if (!blockToMove) return;
 
     const cloned = cloneBlock(blockToMove);
     if (!cloned) return;
     cloned.id = blockToMove.id;
 
-    let newRoot = removeFromTree(state.root, fromId);
-    newRoot = updateInTree(newRoot, toParentId, (parent) => {
-      const newArgs = [...parent.args];
-      newArgs[toSlotIndex] = cloned;
-      return { ...parent, args: newArgs };
-    });
+    const toIdx = findRootIndex(state.roots, toParentId);
+    if (toIdx === -1) return;
 
-    set({ root: newRoot, generatedCode: generateCode(newRoot) });
+    const newRoots = [...state.roots];
+    const newCodes = [...state.generatedCodes];
+
+    // Remove from source
+    if (fromRoot.id === fromId) {
+      newRoots[fromIdx] = null;
+    } else {
+      newRoots[fromIdx] = removeFromTree(fromRoot, fromId);
+    }
+    newCodes[fromIdx] = generateCode(newRoots[fromIdx]);
+
+    // Add to target
+    const targetRoot = fromIdx === toIdx ? newRoots[toIdx]! : state.roots[toIdx]!;
+    const updatedTarget = fromIdx === toIdx
+      ? updateInTree(newRoots[toIdx]!, toParentId, (parent) => {
+          const newArgs = [...parent.args];
+          newArgs[toSlotIndex] = cloned;
+          return { ...parent, args: newArgs };
+        })
+      : updateInTree(targetRoot, toParentId, (parent) => {
+          const newArgs = [...parent.args];
+          newArgs[toSlotIndex] = cloned;
+          return { ...parent, args: newArgs };
+        });
+    newRoots[toIdx] = updatedTarget;
+    newCodes[toIdx] = generateCode(updatedTarget);
+
+    set({ roots: newRoots, generatedCodes: newCodes });
   },
 
   updateBlockValue: (blockId, newValue) => {
     set((state) => {
-      if (!state.root) return state;
-      const newRoot = updateInTree(state.root, blockId, (b) => ({
+      const idx = findRootIndex(state.roots, blockId);
+      if (idx === -1) return state;
+      const newRoot = updateInTree(state.roots[idx]!, blockId, (b) => ({
         ...b,
         value: newValue,
       }));
-      return { root: newRoot, generatedCode: generateCode(newRoot) };
+      return patchRoot(state.roots, state.generatedCodes, idx, newRoot);
     });
   },
 
   updateBlockName: (blockId, newName) => {
     set((state) => {
-      if (!state.root) return state;
-      const newRoot = updateInTree(state.root, blockId, (b) => ({
+      const idx = findRootIndex(state.roots, blockId);
+      if (idx === -1) return state;
+      const newRoot = updateInTree(state.roots[idx]!, blockId, (b) => ({
         ...b,
         name: newName,
       }));
-      return { root: newRoot, generatedCode: generateCode(newRoot) };
+      return patchRoot(state.roots, state.generatedCodes, idx, newRoot);
     });
   },
 
   addArgSlot: (blockId) => {
     set((state) => {
-      if (!state.root) return state;
-      const newRoot = updateInTree(state.root, blockId, (b) => ({
+      const idx = findRootIndex(state.roots, blockId);
+      if (idx === -1) return state;
+      const newRoot = updateInTree(state.roots[idx]!, blockId, (b) => ({
         ...b,
         args: [...b.args, null],
       }));
-      return { root: newRoot, generatedCode: generateCode(newRoot) };
+      return patchRoot(state.roots, state.generatedCodes, idx, newRoot);
     });
   },
 
   removeArgSlot: (blockId, slotIndex) => {
     set((state) => {
-      if (!state.root) return state;
-      const newRoot = updateInTree(state.root, blockId, (b) => {
+      const idx = findRootIndex(state.roots, blockId);
+      if (idx === -1) return state;
+      const newRoot = updateInTree(state.roots[idx]!, blockId, (b) => {
         const meta = FUNCTION_REGISTRY[b.name];
-        const minSlots = (meta?.variadicFrom ?? 0) + 1; // keep at least fixed args + 1 variadic
+        const minSlots = (meta?.variadicFrom ?? 0) + 1;
         if (b.args.length <= minSlots) return b;
         const newArgs = [...b.args];
         newArgs.splice(slotIndex, 1);
         return { ...b, args: newArgs };
       });
-      return { root: newRoot, generatedCode: generateCode(newRoot) };
+      return patchRoot(state.roots, state.generatedCodes, idx, newRoot);
     });
   },
 
-  setRoot: (root) => set({ root, generatedCode: generateCode(root) }),
+  setRoot: (rootIndex, root) => {
+    const { roots, generatedCodes } = get();
+    set(patchRoot(roots, generatedCodes, rootIndex, root));
+  },
 }));

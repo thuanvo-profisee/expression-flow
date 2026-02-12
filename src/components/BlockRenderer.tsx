@@ -125,6 +125,18 @@ function getColors(funcName: string) {
   return DEFAULT_COLORS;
 }
 
+// ─── Attribute path helpers ──────────────────────────────────────
+
+/**
+ * Parse a bracket-path like "[ProductSubcategory].[ProductCategory].[Name]"
+ * into segments: ["ProductSubcategory", "ProductCategory", "Name"]
+ */
+function parseAttributeSegments(path: string): string[] {
+  return path
+    .split(/\]\.\[/)
+    .map((s) => s.replace(/^\[/, "").replace(/\]$/, ""));
+}
+
 // ─── Attribute Pill ──────────────────────────────────────────────
 
 function AttributePill({ block }: { block: Block }) {
@@ -228,6 +240,18 @@ function AttributePill({ block }: { block: Block }) {
     e.stopPropagation();
   }, []);
 
+  const segments = useMemo(() => parseAttributeSegments(block.name), [block.name]);
+  const leafName = segments[segments.length - 1];
+  const parentSegments = segments.slice(0, -1);
+  const isNested = parentSegments.length > 0;
+
+  // Build a compact breadcrumb: if >2 parents, abbreviate middle with "..."
+  const breadcrumb = useMemo(() => {
+    if (parentSegments.length === 0) return "";
+    if (parentSegments.length <= 2) return parentSegments.join(" › ");
+    return `${parentSegments[0]} › … › ${parentSegments[parentSegments.length - 1]}`;
+  }, [parentSegments]);
+
   return (
     <>
       <div ref={pillRef} className="inline-block">
@@ -239,9 +263,10 @@ function AttributePill({ block }: { block: Block }) {
               setIsSearchOpen(true);
             }
           }}
+          title={block.name}
           className={`
             group inline-flex items-center gap-1.5
-            px-3 py-1.5 rounded-full
+            px-3 ${isNested ? "py-1" : "py-1.5"} rounded-full
             bg-blue-100 border border-blue-300
             text-blue-700 text-sm font-medium
             cursor-pointer
@@ -250,8 +275,17 @@ function AttributePill({ block }: { block: Block }) {
             ${isSearchOpen ? "ring-2 ring-blue-400" : ""}
           `}
         >
-          <Hash size={12} className="text-blue-400" />
-          <span>{block.name}</span>
+          <Hash size={12} className="text-blue-400 shrink-0" />
+          {isNested ? (
+            <span className="flex flex-col leading-tight">
+              <span className="text-[9px] text-blue-400 font-normal -mb-0.5">
+                {breadcrumb}
+              </span>
+              <span>{leafName}</span>
+            </span>
+          ) : (
+            <span>{leafName}</span>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation();

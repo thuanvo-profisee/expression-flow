@@ -79,7 +79,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
   // ━━ STRING ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   CONCAT: {
     name: 'CONCAT', label: 'CONCAT',
-    argLabels: ['String 1', 'String 2', 'String 3'],
+    argLabels: ['String 1', 'String 2'],
     description: 'Concatenate two or more strings',
     details: 'Syntax: CONCAT(<string1>, <string2>, ...)\n\nConcatenates two or more strings together.\n\nParameters:\n• string1 — First string expression\n• string2 — Second string expression\n• (variadic) — Add more strings as needed',
     color: 'sky', category: 'function', subcategory: 'string',
@@ -283,7 +283,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
 
   // ━━ COMPARISON OPERATORS (infix) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   '>': {
-    name: '>', label: 'Greater than >',
+    name: '>', label: '>',
     argLabels: ['Left', 'Right'],
     description: 'Greater than',
     details: 'Syntax: <left> > <right>\n\nReturns true if the left expression is greater than the right expression.',
@@ -291,7 +291,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '<': {
-    name: '<', label: 'Less than  <',
+    name: '<', label: '<',
     argLabels: ['Left', 'Right'],
     description: 'Less than',
     details: 'Syntax: <left> < <right>\n\nReturns true if the left expression is less than the right expression.',
@@ -299,7 +299,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '>=': {
-    name: '>=', label: 'Greater or equal  >=',
+    name: '>=', label: '>=',
     argLabels: ['Left', 'Right'],
     description: 'Greater or equal',
     details: 'Syntax: <left> >= <right>\n\nReturns true if the left expression is greater than or equal to the right expression.',
@@ -307,7 +307,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '<=': {
-    name: '<=', label: 'Less or equal  <=',
+    name: '<=', label: '<=',
     argLabels: ['Left', 'Right'],
     description: 'Less or equal',
     details: 'Syntax: <left> <= <right>\n\nReturns true if the left expression is less than or equal to the right expression.',
@@ -315,7 +315,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '<>': {
-    name: '<>', label: 'Not equal  <>',
+    name: '<>', label: '<>',
     argLabels: ['Left', 'Right'],
     description: 'Not equal to',
     details: 'Syntax: <left> <> <right>\n\nReturns true if the left expression is not equal to the right expression.',
@@ -323,7 +323,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '=': {
-    name: '=', label: 'Equal  =',
+    name: '=', label: '=',
     argLabels: ['Left', 'Right'],
     description: 'Equal to',
     details: 'Syntax: <left> = <right>\n\nReturns true if the left expression equals the right expression.',
@@ -333,7 +333,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
 
   // ━━ ARITHMETIC OPERATORS (infix) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   '+': {
-    name: '+', label: 'Add  +',
+    name: '+', label: '+',
     argLabels: ['Left', 'Right'],
     description: 'Addition',
     details: 'Syntax: <left> + <right>\n\nReturns the sum of the left and right expressions.',
@@ -341,7 +341,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '-': {
-    name: '-', label: 'Subtract  -',
+    name: '-', label: '-',
     argLabels: ['Left', 'Right'],
     description: 'Subtraction',
     details: 'Syntax: <left> - <right>\n\nReturns the difference of the left and right expressions.',
@@ -349,7 +349,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '*': {
-    name: '*', label: 'Multiply  *',
+    name: '*', label: '*',
     argLabels: ['Left', 'Right'],
     description: 'Multiplication',
     details: 'Syntax: <left> * <right>\n\nReturns the product of the left and right expressions.',
@@ -357,7 +357,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
     isInfix: true,
   },
   '/': {
-    name: '/', label: 'Divide  /',
+    name: '/', label: '/',
     argLabels: ['Left', 'Right'],
     description: 'Division',
     details: 'Syntax: <left> / <right>\n\nReturns the quotient of the left and right expressions.',
@@ -367,7 +367,7 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
 
   // ━━ GROUPING ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   GROUP: {
-    name: 'GROUP', label: 'LIST ( )',
+    name: 'GROUP', label: '( )',
     argLabels: ['Item 1'],
     description: 'Parentheses grouping / value list',
     details: 'Syntax: ( <item1>, <item2>, ..., <itemN> )\n\nReturns a list of the items provided. Can be used to group multiple items together or as a value list.',
@@ -428,6 +428,16 @@ export const EXPRESSION_MODE_META: Record<ExpressionMode, {
     example: 'IF(LENGTH([Name]) > 0, [Name], "")',
   },
 };
+
+// ─── Block Configuration (developer API) ─────────────────────────
+
+/** Per-block configuration set by the developer */
+export interface BlockConfig {
+  /** Display name shown in the block header (e.g. "Validation Rule") */
+  name: string;
+  /** Return type — validation returns boolean, assignment returns a value */
+  expressionMode: ExpressionMode;
+}
 
 // ─── Attribute Tree ───────────────────────────────────────────────
 

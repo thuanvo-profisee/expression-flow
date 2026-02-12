@@ -3,8 +3,6 @@ import {
   GripVertical,
   Braces,
   Sparkles,
-  ShieldCheck,
-  ArrowRightLeft,
   ChevronDown,
   ChevronRight,
   Zap,
@@ -22,14 +20,37 @@ import {
 import type {
   DragItem,
   FunctionMeta,
-  ExpressionMode,
 } from "../types";
 import {
   getFunctionsBySubcategory,
   SUBCATEGORY_ORDER,
-  EXPRESSION_MODE_META,
 } from "../types";
-import { useExpressionStore } from "../store";
+import { useExpressionStore, SCENARIOS } from "../store";
+import type { ScenarioKey } from "../store";
+
+// ─── Color mapping (matches BlockRenderer on the canvas) ─────────
+
+const PANEL_COLORS: Record<string, { border: string; bg: string; text: string }> = {
+  indigo:  { border: "border-l-indigo-400",  bg: "bg-indigo-50/60",  text: "text-indigo-700" },
+  emerald: { border: "border-l-emerald-400", bg: "bg-emerald-50/60", text: "text-emerald-700" },
+  amber:   { border: "border-l-amber-400",   bg: "bg-amber-50/60",   text: "text-amber-700" },
+  rose:    { border: "border-l-rose-400",     bg: "bg-rose-50/60",    text: "text-rose-700" },
+  purple:  { border: "border-l-purple-400",   bg: "bg-purple-50/60",  text: "text-purple-700" },
+  cyan:    { border: "border-l-cyan-400",     bg: "bg-cyan-50/60",    text: "text-cyan-700" },
+  teal:    { border: "border-l-teal-400",     bg: "bg-teal-50/60",    text: "text-teal-700" },
+  pink:    { border: "border-l-pink-400",     bg: "bg-pink-50/60",    text: "text-pink-700" },
+  orange:  { border: "border-l-orange-400",   bg: "bg-orange-50/60",  text: "text-orange-700" },
+  sky:     { border: "border-l-sky-400",      bg: "bg-sky-50/60",     text: "text-sky-700" },
+  violet:  { border: "border-l-violet-400",   bg: "bg-violet-50/60",  text: "text-violet-700" },
+  lime:    { border: "border-l-lime-500",     bg: "bg-lime-50/60",    text: "text-lime-700" },
+  slate:   { border: "border-l-slate-400",    bg: "bg-slate-50/60",   text: "text-slate-700" },
+};
+
+const DEFAULT_PANEL_COLOR = { border: "border-l-slate-300", bg: "bg-white", text: "text-slate-700" };
+
+function getPanelColor(colorKey: string) {
+  return PANEL_COLORS[colorKey] ?? DEFAULT_PANEL_COLOR;
+}
 
 // ─── Icon resolver ───────────────────────────────────────────────
 
@@ -187,23 +208,34 @@ function FunctionCard({ meta }: { meta: FunctionMeta }) {
   const item: DragItem = { type: "FUNCTION", name: meta.name };
   const argCount = meta.argLabels.length;
   const isZeroArg = argCount === 0;
+  const colors = getPanelColor(meta.color);
 
   return (
     <div className="flex items-center gap-0.5">
       <div className="flex-1 min-w-0">
         <DraggableItem item={item}>
-          <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white rounded-md border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all duration-150 group">
+          <div className={`
+            flex items-center gap-1.5 px-2 py-1.5
+            rounded-md border border-slate-200 border-l-[3px]
+            hover:shadow-sm transition-all duration-150 group
+            ${colors.border} ${colors.bg}
+          `}>
             <GripVertical
               size={10}
               className="text-slate-300 group-hover:text-slate-400 shrink-0"
             />
             <div className="flex-1 min-w-0">
-              <span className="text-xs font-semibold text-slate-700">
+              <div className={`text-xs font-semibold ${colors.text}`}>
                 {meta.label}
-              </span>
+              </div>
+              {meta.description && (
+                <div className="text-[9px] text-slate-400 leading-tight truncate">
+                  {meta.description}
+                </div>
+              )}
             </div>
 
-            <span className="text-[9px] text-slate-400 bg-slate-50 px-1 py-0.5 rounded shrink-0">
+            <span className="text-[9px] text-slate-400 bg-white/60 px-1 py-0.5 rounded shrink-0">
               {isZeroArg ? "const" : `${argCount}`}
             </span>
             {meta.details && <InfoButton meta={meta} />}
@@ -253,43 +285,43 @@ function Section({
   );
 }
 
-// ─── Mode Toggle ────────────────────────────────────────────────
+// ─── Scenario Picker ────────────────────────────────────────────
 
-function ModeToggle() {
-  const mode = useExpressionStore((s) => s.expressionMode);
-  const setMode = useExpressionStore((s) => s.setExpressionMode);
+const SCENARIO_KEYS = Object.keys(SCENARIOS) as ScenarioKey[];
+
+function ScenarioPicker() {
+  const scenario = useExpressionStore((s) => s.scenario);
+  const setScenario = useExpressionStore((s) => s.setScenario);
 
   return (
     <div className="px-3 py-2 border-b border-slate-200 bg-slate-50/80">
       <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-        Expression Type
+        Scenario
       </div>
       <div className="flex gap-0.5 p-0.5 bg-slate-200/60 rounded-lg">
-        {(["validation", "assignment"] as ExpressionMode[]).map((m) => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            className={`
-              flex-1 flex items-center justify-center gap-1
-              px-2 py-1.5 rounded-md text-[10px] font-semibold
-              transition-all duration-200
-              ${
-                mode === m
-                  ? m === "validation"
-                    ? "bg-white text-amber-700 shadow-sm"
-                    : "bg-white text-indigo-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-white/40"
-              }
-            `}
-          >
-            {m === "validation" ? (
-              <ShieldCheck size={11} />
-            ) : (
-              <ArrowRightLeft size={11} />
-            )}
-            {EXPRESSION_MODE_META[m].label}
-          </button>
-        ))}
+        {SCENARIO_KEYS.map((key) => {
+          const s = SCENARIOS[key];
+          const isActive = scenario === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setScenario(key)}
+              title={s.description}
+              className={`
+                flex-1 flex items-center justify-center gap-1
+                px-2 py-1.5 rounded-md text-[10px] font-semibold
+                transition-all duration-200
+                ${
+                  isActive
+                    ? "bg-white text-indigo-700 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-white/40"
+                }
+              `}
+            >
+              {s.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -311,8 +343,8 @@ export function FunctionsPanel() {
         </h1>
       </div>
 
-      {/* Mode Toggle */}
-      <ModeToggle />
+      {/* Scenario Toggle */}
+      <ScenarioPicker />
 
       {/* Search */}
       <div className="px-3 pt-2 pb-1">

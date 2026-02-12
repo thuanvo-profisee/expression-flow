@@ -1,5 +1,5 @@
 import { memo, useState, useCallback } from 'react';
-import type { NodeProps } from '@xyflow/react';
+import { Handle, Position, type NodeProps } from '@xyflow/react';
 import {
   ShieldCheck,
   ArrowRightLeft,
@@ -7,17 +7,17 @@ import {
   Plus,
   BookOpen,
 } from 'lucide-react';
-import type { Block, ExpressionMode, DragItem } from '../types';
+import type { Block, BlockConfig, DragItem } from '../types';
 import { EXPRESSION_MODE_META } from '../types';
 import { useExpressionStore } from '../store';
 import { BlockRenderer } from './BlockRenderer';
 
 // ─── Root Drop Zone (shown when canvas is empty) ─────────────────
 
-function RootDropZone({ mode }: { mode: ExpressionMode }) {
+function RootDropZone({ config, rootIndex }: { config: BlockConfig; rootIndex: number }) {
   const [isDragOver, setIsDragOver] = useState(false);
   const setRootFromDrop = useExpressionStore((s) => s.setRootFromDrop);
-  const meta = EXPRESSION_MODE_META[mode];
+  const modeMeta = EXPRESSION_MODE_META[config.expressionMode];
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -41,12 +41,12 @@ function RootDropZone({ mode }: { mode: ExpressionMode }) {
         const raw = e.dataTransfer.getData('application/json');
         if (!raw) return;
         const item: DragItem = JSON.parse(raw);
-        setRootFromDrop(item);
+        setRootFromDrop(rootIndex, item);
       } catch {
         // ignore
       }
     },
-    [setRootFromDrop],
+    [setRootFromDrop, rootIndex],
   );
 
   return (
@@ -75,14 +75,14 @@ function RootDropZone({ mode }: { mode: ExpressionMode }) {
         <div className="text-sm font-medium text-slate-500">
           Drop an expression here
         </div>
-        <div className="text-xs text-slate-400 mt-0.5">
-          {mode === 'validation'
+        <div className="text-xs text-slate-400 mt-0.5 px-10">
+          {config.expressionMode === 'validation'
             ? 'Start with a comparison operator (=, >, <, ...) or a logical function (AND, OR, ...)'
             : 'Start with a function (IF, CONCAT, ...) or a data attribute'}
         </div>
       </div>
       <div className="text-[10px] text-slate-300 mt-1">
-        e.g. {meta.example}
+        e.g. {modeMeta.example}
       </div>
     </div>
   );
@@ -92,19 +92,41 @@ function RootDropZone({ mode }: { mode: ExpressionMode }) {
 
 type RootNodeData = {
   root: Block | null;
-  expressionMode: ExpressionMode;
+  blockConfig: BlockConfig;
+  rootIndex: number;
+  totalBlocks: number;
 };
 
 function RootNodeInner({ data }: NodeProps) {
-  const { root, expressionMode } = data as unknown as RootNodeData;
+  const { root, blockConfig, rootIndex, totalBlocks } = data as unknown as RootNodeData;
   const clearRoot = useExpressionStore((s) => s.clearRoot);
   const loadDemo = useExpressionStore((s) => s.loadDemo);
-  const modeMeta = EXPRESSION_MODE_META[expressionMode];
+  const modeMeta = EXPRESSION_MODE_META[blockConfig.expressionMode];
 
-  const isValidation = expressionMode === 'validation';
+  const isValidation = blockConfig.expressionMode === 'validation';
+  const isFirst = rootIndex === 0;
+  const isLast = rootIndex === totalBlocks - 1;
 
   return (
-    <div className="min-w-[340px] max-w-[620px]">
+    <div className="min-w-[340px] max-w-[620px] relative">
+      {/* Left handle — shown on every block except the first */}
+      {!isFirst && (
+        <Handle
+          type="target"
+          position={Position.Left}
+          className="!w-3 !h-3 !bg-slate-300 !border-2 !border-white !-left-1.5"
+        />
+      )}
+
+      {/* Right handle — shown on every block except the last */}
+      {!isLast && (
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="!w-3 !h-3 !bg-slate-300 !border-2 !border-white !-right-1.5"
+        />
+      )}
+
       {/* Mode header card */}
       <div className={`
         rounded-t-xl border-2 border-b-0 px-4 py-2.5
@@ -121,7 +143,7 @@ function RootNodeInner({ data }: NodeProps) {
         )}
         <div className="flex-1 min-w-0">
           <div className={`text-sm font-bold ${isValidation ? 'text-amber-700' : 'text-indigo-700'}`}>
-            {modeMeta.label} Expression
+            {blockConfig.name}
           </div>
           <div className="text-[10px] text-slate-400">
             Returns: {modeMeta.returnType}
@@ -129,7 +151,7 @@ function RootNodeInner({ data }: NodeProps) {
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={loadDemo}
+            onClick={() => loadDemo(rootIndex)}
             className="p-1.5 rounded-lg hover:bg-white/60 transition-colors group/demo"
             title="Load example"
           >
@@ -137,7 +159,7 @@ function RootNodeInner({ data }: NodeProps) {
           </button>
           {root && (
             <button
-              onClick={clearRoot}
+              onClick={() => clearRoot(rootIndex)}
               className="p-1.5 rounded-lg hover:bg-red-100 transition-colors group/clear"
               title="Clear expression"
             >
@@ -155,7 +177,7 @@ function RootNodeInner({ data }: NodeProps) {
         {root ? (
           <BlockRenderer block={root} />
         ) : (
-          <RootDropZone mode={expressionMode} />
+          <RootDropZone config={blockConfig} rootIndex={rootIndex} />
         )}
       </div>
     </div>

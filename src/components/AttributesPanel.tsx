@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import {
   Database,
   Hash,
@@ -279,11 +279,11 @@ function CustomValueInput() {
           [
             ['""', 'EMPTY'],
             ['" "', "SPACE"],
-            ["0", "0"],
-            ["1", "1"],
+            ["NULL", "NULL"],
             ["TRUE", "TRUE"],
             ["FALSE", "FALSE"],
-            ["NULL", "NULL"],
+            ["0", "0"],
+            ["1", "1"],
           ] as [string, string][]
         ).map(([value, label]) => {
           const item: DragItem = { type: "LITERAL", name: "Literal", value };
@@ -308,16 +308,100 @@ function CustomValueInput() {
   );
 }
 
+// ─── Collapsible Section ────────────────────────────────────────
+
+function CollapsibleSection({
+  icon,
+  label,
+  count,
+  defaultOpen = false,
+  children,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  count?: number;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 w-full text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 hover:text-slate-700 transition-colors"
+      >
+        {open ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+        {icon}
+        <span>{label}</span>
+        {count != null && (
+          <span className="text-slate-300 ml-auto font-normal normal-case">
+            {count}
+          </span>
+        )}
+      </button>
+      {open && <div className="mb-2">{children}</div>}
+    </div>
+  );
+}
+
 // ─── Attributes Panel (Right) ───────────────────────────────────
 
+const MIN_WIDTH = 250;
+const MAX_WIDTH = 500;
+const DEFAULT_WIDTH = 300;
+
 export function AttributesPanel() {
-  const root = useExpressionStore((s) => s.root);
-  const expressionMode = useExpressionStore((s) => s.expressionMode);
+  const roots = useExpressionStore((s) => s.roots);
+  const blockConfigs = useExpressionStore((s) => s.blockConfigs);
   const [search, setSearch] = useState("");
   const lowerSearch = search.toLowerCase().trim();
 
+  const [width, setWidth] = useState(DEFAULT_WIDTH);
+  const isResizing = useRef(false);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    const startX = e.clientX;
+    const startWidth = width;
+
+    const onMouseMove = (ev: MouseEvent) => {
+      if (!isResizing.current) return;
+      // Dragging left increases width, dragging right decreases
+      const delta = startX - ev.clientX;
+      const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + delta));
+      setWidth(newWidth);
+    };
+
+    const onMouseUp = () => {
+      isResizing.current = false;
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }, [width]);
+
   return (
-    <div className="w-[260px] h-full flex flex-col bg-white border-l border-slate-200 shrink-0">
+    <div
+      className="h-full flex flex-col bg-white border-l border-slate-200 shrink-0 relative"
+      style={{ width }}
+    >
+      {/* Resize handle */}
+      <div
+        onMouseDown={handleMouseDown}
+        className="
+          absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize z-10
+          hover:bg-indigo-400/40 active:bg-indigo-500/50
+          transition-colors duration-150
+        "
+      />
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-200 bg-gradient-to-r from-blue-500 to-cyan-500">
         <Database size={16} className="text-white" />
@@ -343,15 +427,22 @@ export function AttributesPanel() {
           />
         </div>
 
-        {/* Data Attributes Tree */}
-        <div>
-          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
-            <Database size={10} />
-            <span>Attributes</span>
-            <span className="text-slate-300 ml-auto font-normal normal-case">
-              {ATTRIBUTE_CATALOG.length}
-            </span>
-          </div>
+        {/* Custom Value — collapsible */}
+        <CollapsibleSection
+          icon={<Plus size={10} />}
+          label="Custom Value"
+          defaultOpen
+        >
+          <CustomValueInput />
+        </CollapsibleSection>
+
+        {/* Data Attributes Tree — collapsible */}
+        <CollapsibleSection
+          icon={<Database size={10} />}
+          label="Attributes"
+          count={ATTRIBUTE_CATALOG.length}
+          defaultOpen
+        >
           <div className="space-y-0.5">
             {ATTRIBUTE_CATALOG.map((node) => (
               <AttributeTreeNode
@@ -362,16 +453,8 @@ export function AttributesPanel() {
               />
             ))}
           </div>
-        </div>
+        </CollapsibleSection>
 
-        {/* Custom Value */}
-        <div>
-          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
-            <Plus size={10} />
-            <span>Custom Value</span>
-          </div>
-          <CustomValueInput />
-        </div>
       </div>
 
       {/* Generated Code Panel */}
@@ -381,24 +464,35 @@ export function AttributesPanel() {
           <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
             Generated
           </span>
-          <div className="flex-1" />
-          <span
-            className={`
-            text-[9px] font-semibold px-1.5 py-0.5 rounded
-            ${
-              expressionMode === "validation"
-                ? "bg-amber-100 text-amber-600"
-                : "bg-indigo-100 text-indigo-600"
-            }
-          `}
-          >
-            {expressionMode === "validation" ? "bool" : "value"}
-          </span>
         </div>
-        <div className="px-3 pb-3">
-          <pre className="text-[10px] text-slate-600 bg-white border border-slate-200 rounded-lg p-2 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-32 overflow-y-auto">
-            {generateCode(root)}
-          </pre>
+        <div className="px-3 pb-3 space-y-2">
+          {roots.map((root, idx) => {
+            const cfg = blockConfigs[idx];
+            const isValidation = cfg?.expressionMode === "validation";
+            return (
+              <div key={idx}>
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[9px] font-semibold text-slate-400 truncate">
+                    {cfg?.name ?? `Expression ${idx + 1}`}
+                  </span>
+                  <span
+                    className={`
+                      text-[8px] font-semibold px-1 py-0.5 rounded shrink-0
+                      ${isValidation
+                        ? "bg-amber-100 text-amber-600"
+                        : "bg-indigo-100 text-indigo-600"
+                      }
+                    `}
+                  >
+                    {isValidation ? "bool" : "value"}
+                  </span>
+                </div>
+                <pre className="text-[10px] text-slate-600 bg-white border border-slate-200 rounded-lg p-2 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-24 overflow-y-auto">
+                  {generateCode(root)}
+                </pre>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
