@@ -103,7 +103,7 @@ function AttributeTreeNode({
         <DraggableItem item={item}>
           <div
             className={`
-            flex items-center gap-1 px-2 py-1 rounded-md
+            flex items-center gap-1 px-2 py-1 rounded-full
             border text-xs font-medium
             hover:shadow-sm transition-all duration-150
             ${
@@ -140,7 +140,7 @@ function AttributeTreeNode({
 
       {/* Children */}
       {hasChildren && showExpanded && (
-        <div className="mt-0.5">
+        <div className="mt-1.5 space-y-1">
           {node.children!.map((child) => (
             <AttributeTreeNode
               key={child.id}
@@ -486,7 +486,7 @@ export function AttributesPanel() {
           count={activeCatalog.length}
           defaultOpen
         >
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {activeCatalog.map((node) => (
               <AttributeTreeNode
                 key={node.id}
