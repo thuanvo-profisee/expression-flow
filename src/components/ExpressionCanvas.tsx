@@ -124,6 +124,7 @@ export function ExpressionCanvas() {
                 <Controls
                     showInteractive={false}
                     className="!bg-white !border-slate-200 !shadow-lg !rounded-xl"
+                    position={"bottom-right"}
                 />
 
                 {/* Floating options card */}
