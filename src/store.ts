@@ -14,6 +14,10 @@ import {
     flattenAttributes,
 } from "./types";
 import type { ReactFlowInstance } from "@xyflow/react";
+import { fetchEntities, fetchEntityAttributes } from "./api/profisee";
+import type { EntityOption } from "./api/profisee";
+import { loadStoredConfig, saveStoredConfig } from "./api/config";
+import type { ProfiseeConfig } from "./api/config";
 
 // ─── ReactFlow instance holder (for programmatic panning) ────────
 
@@ -308,6 +312,45 @@ export const SCENARIOS: Record<ScenarioKey, Scenario> = {
     },
 };
 
+// ─── Attribute tree helpers (for lazy-loaded children) ──────────
+
+/** Prefix used in the entity dropdown for the built-in demo catalogs */
+export const DEMO_PREFIX = "demo:";
+
+function findAttributeNode(
+    nodes: AttributeNode[],
+    value: string,
+): AttributeNode | null {
+    for (const n of nodes) {
+        if (n.value === value) return n;
+        if (n.children) {
+            const found = findAttributeNode(n.children, value);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
+function patchAttributeNode(
+    nodes: AttributeNode[],
+    value: string,
+    updater: (n: AttributeNode) => AttributeNode,
+): AttributeNode[] {
+    return nodes.map((n) => {
+        if (n.value === value) return updater(n);
+        if (n.children?.length) {
+            return {
+                ...n,
+                children: patchAttributeNode(n.children, value, updater),
+            };
+        }
+        return n;
+    });
+}
+
+/** Guards against out-of-order responses when switching entities fast */
+let attributeRequestId = 0;
+
 // ─── Store Interface ─────────────────────────────────────────────
 
 interface ExpressionState {
@@ -322,6 +365,18 @@ interface ExpressionState {
     activeCatalog: AttributeNode[];
     flatAttributes: FlatAttribute[];
 
+    // Live entity list (Profisee REST API)
+    entities: EntityOption[];
+    entitiesLoading: boolean;
+    entitiesError: string | null;
+    /** API entity name, or "demo:<key>" for a built-in catalog */
+    selectedEntityName: string | null;
+    attributesLoading: boolean;
+    attributesError: string | null;
+
+    // Connection settings dialog
+    configDialogOpen: boolean;
+
     // Clipboard
     clipboard: Block | null;
 
@@ -331,6 +386,13 @@ interface ExpressionState {
     // Actions
     focusBlock: (blockId: string | null) => void;
     setActiveCatalog: (key: AttributeCatalogKey) => void;
+    loadEntities: () => Promise<void>;
+    selectEntity: (name: string) => Promise<void>;
+    loadNodeChildren: (nodeValue: string) => Promise<void>;
+    openConfigDialog: () => void;
+    closeConfigDialog: () => void;
+    /** Persist connection settings to browser storage and reconnect */
+    saveConnectionConfig: (cfg: ProfiseeConfig) => void;
     copyBlock: (blockId: string) => void;
     pasteToSlot: (parentId: string, slotIndex: number) => void;
     pasteToRoot: (rootIndex: number) => void;
@@ -383,6 +445,120 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
     activeCatalogKey: INITIAL_CATALOG_KEY,
     activeCatalog: INITIAL_CATALOG,
     flatAttributes: INITIAL_FLAT,
+
+    entities: [],
+    entitiesLoading: false,
+    entitiesError: null,
+    selectedEntityName: null,
+    attributesLoading: false,
+    attributesError: null,
+
+    configDialogOpen: false,
+    openConfigDialog: () => set({ configDialogOpen: true }),
+    closeConfigDialog: () => set({ configDialogOpen: false }),
+
+    saveConnectionConfig: (cfg) => {
+        saveStoredConfig(cfg);
+        attributeRequestId++; // cancel any in-flight attribute load
+        set({
+            configDialogOpen: false,
+            entities: [],
+            entitiesError: null,
+            selectedEntityName: null,
+            attributesLoading: false,
+            attributesError: null,
+        });
+        void get().loadEntities();
+    },
+
+    loadEntities: async () => {
+        if (get().entitiesLoading) return; // already in flight
+        set({ entitiesLoading: true, entitiesError: null });
+        try {
+            const entities = await fetchEntities();
+            set({ entities, entitiesLoading: false });
+            // Auto-select the first entity so attributes show immediately
+            if (!get().selectedEntityName && entities.length > 0) {
+                void get().selectEntity(entities[0].name);
+            }
+        } catch (e) {
+            const message = (e as Error).message;
+            set({
+                entities: [],
+                entitiesLoading: false,
+                entitiesError: message,
+            });
+            // Connection settings missing or rejected → ask the user
+            if (!loadStoredConfig() || /\b401\b/.test(message)) {
+                set({ configDialogOpen: true });
+            }
+            // Keep the app usable with the built-in demo catalog
+            if (!get().selectedEntityName) {
+                void get().selectEntity(`${DEMO_PREFIX}${INITIAL_CATALOG_KEY}`);
+            }
+        }
+    },
+
+    selectEntity: async (name) => {
+        // Built-in demo catalogs keep working offline
+        if (name.startsWith(DEMO_PREFIX)) {
+            const key = name.slice(DEMO_PREFIX.length) as AttributeCatalogKey;
+            const entry = ATTRIBUTE_CATALOGS[key];
+            if (!entry) return;
+            attributeRequestId++; // cancel any in-flight API load
+            set({
+                selectedEntityName: name,
+                attributesLoading: false,
+                attributesError: null,
+                activeCatalogKey: key,
+                activeCatalog: entry.catalog,
+                flatAttributes: flattenAttributes(entry.catalog),
+            });
+            return;
+        }
+
+        const reqId = ++attributeRequestId;
+        set({
+            selectedEntityName: name,
+            attributesLoading: true,
+            attributesError: null,
+        });
+        try {
+            const catalog = await fetchEntityAttributes(name);
+            if (reqId !== attributeRequestId) return; // stale response
+            set({
+                activeCatalog: catalog,
+                flatAttributes: flattenAttributes(catalog),
+                attributesLoading: false,
+            });
+        } catch (e) {
+            if (reqId !== attributeRequestId) return;
+            set({
+                activeCatalog: [],
+                flatAttributes: [],
+                attributesLoading: false,
+                attributesError: (e as Error).message,
+            });
+        }
+    },
+
+    loadNodeChildren: async (nodeValue) => {
+        const node = findAttributeNode(get().activeCatalog, nodeValue);
+        if (!node?.domainEntityName || node.childrenLoaded) return;
+        const children = await fetchEntityAttributes(
+            node.domainEntityName,
+            nodeValue,
+        );
+        const newCatalog = patchAttributeNode(
+            get().activeCatalog,
+            nodeValue,
+            (n) => ({ ...n, children, childrenLoaded: true }),
+        );
+        set({
+            activeCatalog: newCatalog,
+            flatAttributes: flattenAttributes(newCatalog),
+        });
+    },
 
     focusedBlockId: null,
     focusBlock: (blockId) => {

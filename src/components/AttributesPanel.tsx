@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect, useMemo } from "react";
 import {
     Database,
     Hash,
@@ -14,6 +14,10 @@ import {
     Braces,
     Maximize2,
     Minimize2,
+    Loader2,
+    AlertTriangle,
+    RefreshCw,
+    Settings,
 } from "lucide-react";
 import type { DragItem, AttributeNode, Block } from "../types";
 import {
@@ -21,7 +25,12 @@ import {
     ATTRIBUTE_CATALOG_KEYS,
     FUNCTION_REGISTRY,
 } from "../types";
-import { useExpressionStore, generateCode, panToBlock } from "../store";
+import {
+    useExpressionStore,
+    generateCode,
+    panToBlock,
+    DEMO_PREFIX,
+} from "../store";
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -73,7 +82,15 @@ function AttributeTreeNode({
     search: string;
 }) {
     const [expanded, setExpanded] = useState(false);
-    const hasChildren = (node.children ?? []).length > 0;
+    const [loadingChildren, setLoadingChildren] = useState(false);
+    const [childError, setChildError] = useState(false);
+    const loadNodeChildren = useExpressionStore((s) => s.loadNodeChildren);
+
+    const loadedChildren = (node.children ?? []).length > 0;
+    // Domain-based attribute whose children haven't been fetched yet
+    const isLazy =
+        !!node.domainEntityName && !node.childrenLoaded && !loadedChildren;
+    const hasChildren = loadedChildren || isLazy;
     const item: DragItem = { type: "ATTRIBUTE", name: node.value };
 
     // When searching, auto-expand matching branches
@@ -82,6 +99,26 @@ function AttributeTreeNode({
         ? nodeMatchesSearch(node, search)
         : expanded;
     const labelMatches = node.label.toLowerCase().includes(search);
+
+    const fetchChildren = useCallback(async () => {
+        setLoadingChildren(true);
+        setChildError(false);
+        try {
+            await loadNodeChildren(node.value);
+        } catch {
+            setChildError(true);
+        } finally {
+            setLoadingChildren(false);
+        }
+    }, [loadNodeChildren, node.value]);
+
+    const handleToggle = useCallback(() => {
+        const next = !showExpanded;
+        setExpanded(next);
+        if (next && isLazy && !loadingChildren) {
+            void fetchChildren();
+        }
+    }, [showExpanded, isLazy, loadingChildren, fetchChildren]);
 
     // Hide nodes that don't match during search (and have no matching descendants)
     if (isSearching && !nodeMatchesSearch(node, search)) return null;
@@ -96,10 +133,15 @@ function AttributeTreeNode({
                 {/* Expand toggle */}
                 {hasChildren ? (
                     <button
-                        onClick={() => setExpanded(!showExpanded)}
+                        onClick={handleToggle}
                         className="p-0.5 rounded hover:bg-slate-100 transition-colors shrink-0"
                     >
-                        {showExpanded ? (
+                        {loadingChildren ? (
+                            <Loader2
+                                size={12}
+                                className="text-blue-400 animate-spin"
+                            />
+                        ) : showExpanded ? (
                             <ChevronDown size={12} className="text-slate-400" />
                         ) : (
                             <ChevronRight
@@ -134,7 +176,9 @@ function AttributeTreeNode({
                         <span className="truncate">{node.label}</span>
                         {hasChildren && (
                             <span className="text-[8px] text-blue-300 ml-0.5 shrink-0">
-                                +{node.children!.length}
+                                {loadedChildren
+                                    ? `+${node.children!.length}`
+                                    : "…"}
                             </span>
                         )}
                     </div>
@@ -154,6 +198,16 @@ function AttributeTreeNode({
             {/* Children */}
             {hasChildren && showExpanded && (
                 <div className="mt-1.5 space-y-1">
+                    {childError && (
+                        <button
+                            onClick={() => void fetchChildren()}
+                            className="flex items-center gap-1 text-[9px] text-rose-500 hover:text-rose-700 transition-colors"
+                            style={{ paddingLeft: `${(depth + 1) * 16}px` }}
+                        >
+                            <AlertTriangle size={9} />
+                            Failed to load — retry
+                        </button>
+                    )}
                     {node.children!.map((child) => (
                         <AttributeTreeNode
                             key={child.id}
@@ -323,6 +377,216 @@ function CustomValueInput() {
                     );
                 })}
             </div>
+        </div>
+    );
+}
+
+// ─── Entity Dropdown ────────────────────────────────────────────
+// Searchable dropdown styled to match the attribute-select dropdown
+// in BlockRenderer (search header + hover/highlight result list).
+
+interface EntityDropdownOption {
+    value: string; // entity name, or "demo:<key>"
+    label: string;
+    group: "profisee" | "demo";
+}
+
+const GROUP_LABELS: Record<EntityDropdownOption["group"], string> = {
+    profisee: "Profisee Entities",
+    demo: "Demo Catalogs",
+};
+
+function EntityDropdown({
+    options,
+    selected,
+    loading,
+    onSelect,
+}: {
+    options: EntityDropdownOption[];
+    selected: string | null;
+    loading: boolean;
+    onSelect: (value: string) => void;
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [query, setQuery] = useState("");
+    const [highlightIdx, setHighlightIdx] = useState(0);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    const filtered = useMemo(() => {
+        const q = query.toLowerCase().trim();
+        if (!q) return options;
+        return options.filter((o) => o.label.toLowerCase().includes(q));
+    }, [query, options]);
+
+    const selectedLabel =
+        options.find((o) => o.value === selected)?.label ?? null;
+
+    // Focus search when opened
+    useEffect(() => {
+        if (isOpen) searchInputRef.current?.focus();
+    }, [isOpen]);
+
+    // Close on outside click
+    useEffect(() => {
+        if (!isOpen) return;
+        const handler = (e: PointerEvent) => {
+            if (!containerRef.current?.contains(e.target as Node)) {
+                setIsOpen(false);
+                setQuery("");
+            }
+        };
+        document.addEventListener("pointerdown", handler, true);
+        return () =>
+            document.removeEventListener("pointerdown", handler, true);
+    }, [isOpen]);
+
+    const select = useCallback(
+        (value: string) => {
+            onSelect(value);
+            setIsOpen(false);
+            setQuery("");
+        },
+        [onSelect],
+    );
+
+    const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent) => {
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setHighlightIdx((i) => Math.min(i + 1, filtered.length - 1));
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setHighlightIdx((i) => Math.max(i - 1, 0));
+            } else if (e.key === "Enter" && filtered.length > 0) {
+                e.preventDefault();
+                select(filtered[highlightIdx].value);
+            } else if (e.key === "Escape") {
+                setIsOpen(false);
+                setQuery("");
+            }
+        },
+        [filtered, highlightIdx, select],
+    );
+
+    return (
+        <div ref={containerRef} className="relative">
+            {/* Trigger */}
+            <button
+                onClick={() => setIsOpen((v) => !v)}
+                disabled={loading && options.length === 0}
+                className={`
+          w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-md
+          border bg-white text-xs font-medium text-slate-700
+          transition-all duration-150
+          hover:border-blue-300 hover:shadow-sm
+          disabled:opacity-60 disabled:cursor-wait
+          ${isOpen ? "border-blue-400 ring-2 ring-blue-400/30" : "border-slate-200"}
+        `}
+            >
+                <Database size={12} className="text-blue-400 shrink-0" />
+                <span
+                    className={`truncate ${selectedLabel ? "" : "text-slate-300"}`}
+                >
+                    {selectedLabel ??
+                        (loading ? "Loading entities…" : "Select an entity…")}
+                </span>
+                {loading ? (
+                    <Loader2
+                        size={12}
+                        className="text-blue-400 animate-spin ml-auto shrink-0"
+                    />
+                ) : (
+                    <ChevronDown
+                        size={12}
+                        className={`text-slate-400 ml-auto shrink-0 transition-transform duration-150 ${
+                            isOpen ? "rotate-180" : ""
+                        }`}
+                    />
+                )}
+            </button>
+
+            {/* Dropdown panel */}
+            {isOpen && (
+                <div
+                    className="
+            absolute left-0 right-0 top-full mt-1 z-50
+            max-h-[240px]
+            bg-white border border-slate-200 rounded-lg shadow-lg
+            flex flex-col overflow-hidden
+          "
+                >
+                    {/* Search input */}
+                    <div className="flex items-center gap-1.5 px-2.5 py-2 border-b border-slate-100">
+                        <Search size={12} className="text-slate-400 shrink-0" />
+                        <input
+                            ref={searchInputRef}
+                            type="text"
+                            value={query}
+                            onChange={(e) => {
+                                setQuery(e.target.value);
+                                setHighlightIdx(0);
+                            }}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Search entities..."
+                            className="
+                flex-1 text-xs text-slate-700 bg-transparent
+                placeholder:text-slate-300
+                outline-none
+              "
+                        />
+                        <span className="text-[9px] text-slate-300">
+                            {filtered.length}
+                        </span>
+                    </div>
+                    {/* Results */}
+                    <div className="flex-1 overflow-y-auto">
+                        {filtered.length === 0 ? (
+                            <div className="px-3 py-4 text-xs text-slate-400 text-center">
+                                No entities found
+                            </div>
+                        ) : (
+                            filtered.map((opt, idx) => (
+                                <div key={opt.value}>
+                                    {/* Group header when group changes */}
+                                    {(idx === 0 ||
+                                        filtered[idx - 1].group !==
+                                            opt.group) && (
+                                        <div className="px-2.5 pt-2 pb-1 text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+                                            {GROUP_LABELS[opt.group]}
+                                        </div>
+                                    )}
+                                    <button
+                                        onClick={() => select(opt.value)}
+                                        onMouseEnter={() =>
+                                            setHighlightIdx(idx)
+                                        }
+                                        className={`
+                      w-full flex items-center gap-2 px-2.5 py-1.5 text-left
+                      text-xs transition-colors
+                      ${idx === highlightIdx ? "bg-blue-50" : "hover:bg-slate-50"}
+                      ${opt.value === selected ? "font-semibold" : ""}
+                    `}
+                                        title={opt.label}
+                                    >
+                                        <Database
+                                            size={10}
+                                            className={`shrink-0 ${
+                                                opt.group === "demo"
+                                                    ? "text-slate-300"
+                                                    : "text-blue-400"
+                                            }`}
+                                        />
+                                        <span className="text-slate-700 truncate">
+                                            {opt.label}
+                                        </span>
+                                    </button>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -672,10 +936,39 @@ const DEFAULT_WIDTH = 300;
 export function AttributesPanel() {
     const roots = useExpressionStore((s) => s.roots);
     const blockConfigs = useExpressionStore((s) => s.blockConfigs);
-    const activeCatalogKey = useExpressionStore((s) => s.activeCatalogKey);
     const activeCatalog = useExpressionStore((s) => s.activeCatalog);
-    const setActiveCatalog = useExpressionStore((s) => s.setActiveCatalog);
+    const entities = useExpressionStore((s) => s.entities);
+    const entitiesLoading = useExpressionStore((s) => s.entitiesLoading);
+    const entitiesError = useExpressionStore((s) => s.entitiesError);
+    const selectedEntityName = useExpressionStore((s) => s.selectedEntityName);
+    const attributesLoading = useExpressionStore((s) => s.attributesLoading);
+    const attributesError = useExpressionStore((s) => s.attributesError);
+    const loadEntities = useExpressionStore((s) => s.loadEntities);
+    const selectEntity = useExpressionStore((s) => s.selectEntity);
+    const openConfigDialog = useExpressionStore((s) => s.openConfigDialog);
     const [search, setSearch] = useState("");
+
+    // Load the entity list from the Profisee REST API on mount
+    useEffect(() => {
+        void loadEntities();
+    }, [loadEntities]);
+
+    // API entities + built-in demo catalogs, as dropdown options
+    const entityOptions = useMemo<EntityDropdownOption[]>(
+        () => [
+            ...entities.map((e) => ({
+                value: e.name,
+                label: e.name,
+                group: "profisee" as const,
+            })),
+            ...ATTRIBUTE_CATALOG_KEYS.map((key) => ({
+                value: `${DEMO_PREFIX}${key}`,
+                label: `${ATTRIBUTE_CATALOGS[key].label} (demo)`,
+                group: "demo" as const,
+            })),
+        ],
+        [entities],
+    );
     const lowerSearch = search.toLowerCase().trim();
     const [generatedExpanded, setGeneratedExpanded] = useState(false);
 
@@ -736,38 +1029,56 @@ export function AttributesPanel() {
                 <h2 className="text-sm font-bold text-white tracking-tight">
                     Data & Values
                 </h2>
+                <button
+                    onClick={openConfigDialog}
+                    className="ml-auto p-1 rounded hover:bg-white/20 transition-colors"
+                    title="Connection settings"
+                >
+                    <Settings size={14} className="text-white" />
+                </button>
             </div>
 
-            {/* Entity / Catalog Picker — hidden when generated panel is expanded */}
+            {/* Entity Picker — hidden when generated panel is expanded */}
             {!generatedExpanded && (
                 <div className="px-3 py-2 border-b border-slate-200 bg-slate-50/80">
                     <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                         Entity
                     </div>
-                    <div className="flex gap-0.5 p-0.5 bg-slate-200/60 rounded-lg">
-                        {ATTRIBUTE_CATALOG_KEYS.map((key) => {
-                            const entry = ATTRIBUTE_CATALOGS[key];
-                            const isActive = activeCatalogKey === key;
-                            return (
-                                <button
-                                    key={key}
-                                    onClick={() => setActiveCatalog(key)}
-                                    className={`
-                      flex-1 flex items-center justify-center gap-1
-                      px-2 py-1.5 rounded-md text-[10px] font-semibold
-                      transition-all duration-200
-                      ${
-                          isActive
-                              ? "bg-white text-blue-700 shadow-sm"
-                              : "text-slate-500 hover:text-slate-700 hover:bg-white/40"
-                      }
-                    `}
-                                >
-                                    {entry.label}
-                                </button>
-                            );
-                        })}
-                    </div>
+                    <EntityDropdown
+                        options={entityOptions}
+                        selected={selectedEntityName}
+                        loading={entitiesLoading}
+                        onSelect={(value) => void selectEntity(value)}
+                    />
+                    {entitiesError && (
+                        <div className="flex items-start gap-1.5 mt-1.5 px-2 py-1.5 rounded-md bg-rose-50 border border-rose-200">
+                            <AlertTriangle
+                                size={10}
+                                className="text-rose-400 shrink-0 mt-0.5"
+                            />
+                            <div className="min-w-0">
+                                <div className="text-[9px] text-rose-600 break-words">
+                                    {entitiesError}
+                                </div>
+                                <div className="flex items-center gap-3 mt-0.5">
+                                    <button
+                                        onClick={() => void loadEntities()}
+                                        className="flex items-center gap-1 text-[9px] font-semibold text-rose-500 hover:text-rose-700 transition-colors"
+                                    >
+                                        <RefreshCw size={9} />
+                                        Retry
+                                    </button>
+                                    <button
+                                        onClick={openConfigDialog}
+                                        className="flex items-center gap-1 text-[9px] font-semibold text-rose-500 hover:text-rose-700 transition-colors"
+                                    >
+                                        <Settings size={9} />
+                                        Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -808,16 +1119,55 @@ export function AttributesPanel() {
                         count={activeCatalog.length}
                         defaultOpen
                     >
-                        <div className="space-y-1">
-                            {activeCatalog.map((node) => (
-                                <AttributeTreeNode
-                                    key={node.id}
-                                    node={node}
-                                    depth={0}
-                                    search={lowerSearch}
+                        {attributesLoading ? (
+                            <div className="flex items-center gap-1.5 px-1 py-2 text-[10px] text-slate-400">
+                                <Loader2
+                                    size={12}
+                                    className="text-blue-400 animate-spin"
                                 />
-                            ))}
-                        </div>
+                                Loading attributes…
+                            </div>
+                        ) : attributesError ? (
+                            <div className="flex items-start gap-1.5 px-2 py-1.5 rounded-md bg-rose-50 border border-rose-200">
+                                <AlertTriangle
+                                    size={10}
+                                    className="text-rose-400 shrink-0 mt-0.5"
+                                />
+                                <div className="min-w-0">
+                                    <div className="text-[9px] text-rose-600 break-words">
+                                        {attributesError}
+                                    </div>
+                                    {selectedEntityName && (
+                                        <button
+                                            onClick={() =>
+                                                void selectEntity(
+                                                    selectedEntityName,
+                                                )
+                                            }
+                                            className="flex items-center gap-1 mt-0.5 text-[9px] font-semibold text-rose-500 hover:text-rose-700 transition-colors"
+                                        >
+                                            <RefreshCw size={9} />
+                                            Retry
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ) : activeCatalog.length === 0 ? (
+                            <div className="text-[10px] text-slate-300 italic px-1 py-2">
+                                No attributes
+                            </div>
+                        ) : (
+                            <div className="space-y-1">
+                                {activeCatalog.map((node) => (
+                                    <AttributeTreeNode
+                                        key={node.id}
+                                        node={node}
+                                        depth={0}
+                                        search={lowerSearch}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </CollapsibleSection>
                 </div>
             )}

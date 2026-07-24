@@ -666,6 +666,10 @@ export interface AttributeNode {
     propertiesCallback: PropertiesCallback | null;
     children?: AttributeNode[];
     isExpanded?: boolean;
+    /** Domain-based attribute: name of the entity to fetch children from */
+    domainEntityName?: string | null;
+    /** Whether lazy children have been fetched yet */
+    childrenLoaded?: boolean;
 }
 
 /** Catalog key type for switching between demo datasets */
@@ -697,7 +701,7 @@ const CATALOG_PRODUCT: AttributeNode[] = [
         value: "[Class]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmClass/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/HmClass/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[Class]" },
             httpMethod: "GET",
             body: null,
@@ -723,7 +727,7 @@ const CATALOG_PRODUCT: AttributeNode[] = [
         value: "[Color]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmColor/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/HmColor/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[Color]" },
             httpMethod: "GET",
             body: null,
@@ -773,7 +777,7 @@ const CATALOG_PRODUCT: AttributeNode[] = [
         value: "[InHouseManufactured]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmYesNo/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/HmYesNo/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[InHouseManufactured]" },
             httpMethod: "GET",
             body: null,
@@ -817,7 +821,7 @@ const CATALOG_PRODUCT: AttributeNode[] = [
         value: "[ProductLine]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmProductLine/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/HmProductLine/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[ProductLine]" },
             httpMethod: "GET",
             body: null,
@@ -843,7 +847,7 @@ const CATALOG_PRODUCT: AttributeNode[] = [
         value: "[ProductSubcategory]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmProductSubcategory/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/HmProductSubcategory/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[ProductSubcategory]" },
             httpMethod: "GET",
             body: null,
@@ -867,7 +871,7 @@ const CATALOG_PRODUCT: AttributeNode[] = [
                 value: "[ProductSubcategory].[ProductCategory]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmProductCategory/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/HmProductCategory/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[ProductSubcategory].[ProductCategory]",
                     },
@@ -893,7 +897,7 @@ const CATALOG_PRODUCT: AttributeNode[] = [
                         value: "[ProductSubcategory].[ProductCategory].[ProductGroup]",
                         propertiesCallback: {
                             dataKey: "data",
-                            path: "https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmProductGroup/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                            path: "/profisee/webApi/entities/HmProductGroup/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                             parameters: {
                                 pathString:
                                     "[ProductSubcategory].[ProductCategory].[ProductGroup]",
@@ -950,7 +954,7 @@ const CATALOG_PRODUCT: AttributeNode[] = [
         value: "[Size]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmSize/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/HmSize/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[Size]" },
             httpMethod: "GET",
             body: null,
@@ -976,7 +980,7 @@ const CATALOG_PRODUCT: AttributeNode[] = [
         value: "[SizeUofM]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmUnitOfMeasure/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/HmUnitOfMeasure/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[SizeUofM]" },
             httpMethod: "GET",
             body: null,
@@ -1008,7 +1012,7 @@ const CATALOG_PRODUCT: AttributeNode[] = [
         value: "[Style]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmStyle/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/HmStyle/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[Style]" },
             httpMethod: "GET",
             body: null,
@@ -1040,7 +1044,7 @@ const CATALOG_PRODUCT: AttributeNode[] = [
         value: "[WeightUofM]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://vstestws04.corp.profisee.com/profisee/webApi/entities/HmUnitOfMeasure/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/HmUnitOfMeasure/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[WeightUofM]" },
             httpMethod: "GET",
             body: null,
@@ -1072,7 +1076,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
         value: "[ChangeStatusSUP]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_ProductDSStatus/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/SDRA_ProductDSStatus/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[ChangeStatusSUP]" },
             httpMethod: "GET",
             body: null,
@@ -1104,7 +1108,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
         value: "[CompanyIndSUP]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Company_Indicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/SDRA_Company_Indicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[CompanyIndSUP]" },
             httpMethod: "GET",
             body: null,
@@ -1138,7 +1142,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
         value: "[IsActive]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[IsActive]" },
             httpMethod: "GET",
             body: null,
@@ -1224,7 +1228,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
         value: "[PkgVariantId]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_PackageVariant/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/SDRA_PackageVariant/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[PkgVariantId]" },
             httpMethod: "GET",
             body: null,
@@ -1298,7 +1302,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
         value: "[PlaceHolderSupInd]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[PlaceHolderSupInd]" },
             httpMethod: "GET",
             body: null,
@@ -1330,7 +1334,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
         value: "[PublishIndicatorSUP]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_ProductPublishIndicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/SDRA_ProductPublishIndicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[PublishIndicatorSUP]" },
             httpMethod: "GET",
             body: null,
@@ -1404,7 +1408,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
         value: "[SnOPDemandProduct]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Demand_Product/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/SDRA_Demand_Product/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[SnOPDemandProduct]" },
             httpMethod: "GET",
             body: null,
@@ -1434,7 +1438,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                 value: "[SnOPDemandProduct].[ChangeStatusDMD]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_ProductDSStatus/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/SDRA_ProductDSStatus/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[SnOPDemandProduct].[ChangeStatusDMD]",
                     },
@@ -1468,7 +1472,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                 value: "[SnOPDemandProduct].[CompanyIndDMD]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Company_Indicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/SDRA_Company_Indicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[SnOPDemandProduct].[CompanyIndDMD]",
                     },
@@ -1508,7 +1512,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                 value: "[SnOPDemandProduct].[DesignBizCd]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Profit_Center_Hierarchy/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/SDRA_Profit_Center_Hierarchy/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[SnOPDemandProduct].[DesignBizCd]",
                     },
@@ -1746,7 +1750,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                 value: "[SnOPDemandProduct].[IsActive]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[SnOPDemandProduct].[IsActive]",
                     },
@@ -1828,7 +1832,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                 value: "[SnOPDemandProduct].[PlaceHolderDmdInd]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[SnOPDemandProduct].[PlaceHolderDmdInd]",
                     },
@@ -1862,7 +1866,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                 value: "[SnOPDemandProduct].[PublishIndicatorDMD]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_ProductPublishIndicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/SDRA_ProductPublishIndicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[SnOPDemandProduct].[PublishIndicatorDMD]",
                     },
@@ -1896,7 +1900,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                 value: "[SnOPDemandProduct].[SnOPBrandGrp]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_BrandGroup/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/SDRA_DA_BrandGroup/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[SnOPDemandProduct].[SnOPBrandGrp]",
                     },
@@ -1948,7 +1952,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                 value: "[SnOPDemandProduct].[SnOPComputeArchGrp]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_ComputeArchitectureGroup/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/SDRA_DA_ComputeArchitectureGroup/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[SnOPDemandProduct].[SnOPComputeArchGrp]",
                     },
@@ -2036,7 +2040,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                 value: "[SnOPDemandProduct].[SnOPMktSwimlane]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_MarketSwimlane/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/SDRA_DA_MarketSwimlane/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[SnOPDemandProduct].[SnOPMktSwimlane]",
                     },
@@ -2088,7 +2092,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                 value: "[SnOPDemandProduct].[SnOPMktSwimlaneGrp]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_MarketSwimlaneGroup/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/SDRA_DA_MarketSwimlaneGroup/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[SnOPDemandProduct].[SnOPMktSwimlaneGrp]",
                     },
@@ -2146,7 +2150,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                 value: "[SnOPDemandProduct].[SnOPPkgAbbrev]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_PackageAbbreviation/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/SDRA_DA_PackageAbbreviation/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[SnOPDemandProduct].[SnOPPkgAbbrev]",
                     },
@@ -2228,7 +2232,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                 value: "[SnOPDemandProduct].[SnOPProductType]",
                 propertiesCallback: {
                     dataKey: "data",
-                    path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_ProductType/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                    path: "/profisee/webApi/entities/SDRA_DA_ProductType/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                     parameters: {
                         pathString: "[SnOPDemandProduct].[SnOPProductType]",
                     },
@@ -2254,7 +2258,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
                         value: "[SnOPDemandProduct].[SnOPProductType].[CompanyInd]",
                         propertiesCallback: {
                             dataKey: "data",
-                            path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Company_Indicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+                            path: "/profisee/webApi/entities/SDRA_Company_Indicator/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
                             parameters: {
                                 pathString:
                                     "[SnOPDemandProduct].[SnOPProductType].[CompanyInd]",
@@ -2359,7 +2363,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
         value: "[SnOPPostSiBOMInd]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/SDRA_Boolean/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[SnOPPostSiBOMInd]" },
             httpMethod: "GET",
             body: null,
@@ -2403,7 +2407,7 @@ const CATALOG_SUPPLY_PRODUCT: AttributeNode[] = [
         value: "[SnOPWaferFOCd]",
         propertiesCallback: {
             dataKey: "data",
-            path: "https://corpltr50.corp.profisee.com/profisee/webApi/entities/SDRA_DA_WaferFOCode/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
+            path: "/profisee/webApi/entities/SDRA_DA_WaferFOCode/propertyMetadata?pathString={pathString}&isDataQualityExpression=true",
             parameters: { pathString: "[SnOPWaferFOCd]" },
             httpMethod: "GET",
             body: null,

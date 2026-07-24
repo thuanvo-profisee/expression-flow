@@ -1,6 +1,7 @@
 import { FunctionsPanel } from "./components/FunctionsPanel";
 import { AttributesPanel } from "./components/AttributesPanel";
 import { ExpressionCanvas } from "./components/ExpressionCanvas";
+import { ConfigDialog } from "./components/ConfigDialog";
 
 function App() {
     return (
@@ -8,6 +9,7 @@ function App() {
             <FunctionsPanel />
             <ExpressionCanvas />
             <AttributesPanel />
+            <ConfigDialog />
         </div>
     );
 }
