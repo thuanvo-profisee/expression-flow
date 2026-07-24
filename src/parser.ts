@@ -553,3 +553,57 @@ export function parseExpressionToBlock(input: string): Block | null {
     const tree = parser.parse();
     return flattenVariadicInfix(tree);
 }
+
+// ─── DQR clause splitting ──────────────────────────────────────────
+//
+// A Data Quality Rule clause packs a main expression, an optional
+// "WHEN <condition>" guard, and an optional trailing "[Constraint]"
+// marker into one string, e.g.:
+//   [Color].[Code]="Hello" WHEN [Name]="Name" [Constraint]
+
+export interface ParsedDqrClause {
+    main: string;
+    when: string | null;
+    isConstraint: boolean;
+}
+
+/** Index of a whole-word keyword outside quoted strings, or -1 */
+function findTopLevelKeyword(text: string, keyword: string): number {
+    const upper = text.toUpperCase();
+    let inQuotes = false;
+    for (let i = 0; i <= text.length - keyword.length; i++) {
+        const ch = text[i];
+        if (ch === '"') {
+            inQuotes = !inQuotes;
+            continue;
+        }
+        if (inQuotes) continue;
+        const isWordStart = i === 0 || /\s/.test(text[i - 1]);
+        const isWordEnd =
+            i + keyword.length === text.length ||
+            /\s/.test(text[i + keyword.length]);
+        if (isWordStart && isWordEnd && upper.startsWith(keyword, i)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+export function splitDqrClause(raw: string): ParsedDqrClause {
+    let text = raw.trim();
+    const constraintMatch = /\[constraint\]\s*$/i.exec(text);
+    const isConstraint = !!constraintMatch;
+    if (constraintMatch) {
+        text = text.slice(0, constraintMatch.index).trim();
+    }
+
+    const whenIdx = findTopLevelKeyword(text, "WHEN");
+    if (whenIdx === -1) {
+        return { main: text, when: null, isConstraint };
+    }
+    return {
+        main: text.slice(0, whenIdx).trim(),
+        when: text.slice(whenIdx + "WHEN".length).trim(),
+        isConstraint,
+    };
+}

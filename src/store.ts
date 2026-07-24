@@ -14,8 +14,13 @@ import {
     flattenAttributes,
 } from "./types";
 import type { ReactFlowInstance } from "@xyflow/react";
-import { fetchEntities, fetchEntityAttributes } from "./api/profisee";
-import type { EntityOption } from "./api/profisee";
+import {
+    fetchEntities,
+    fetchEntityAttributes,
+    fetchDataQualityRules,
+} from "./api/profisee";
+import type { EntityOption, DataQualityRule } from "./api/profisee";
+import { parseExpressionToBlock, splitDqrClause } from "./parser";
 import { loadStoredConfig, saveStoredConfig } from "./api/config";
 import type { ProfiseeConfig } from "./api/config";
 
@@ -350,6 +355,7 @@ function patchAttributeNode(
 
 /** Guards against out-of-order responses when switching entities fast */
 let attributeRequestId = 0;
+let dqRuleRequestId = 0;
 
 // ─── Store Interface ─────────────────────────────────────────────
 
@@ -374,6 +380,11 @@ interface ExpressionState {
     attributesLoading: boolean;
     attributesError: string | null;
 
+    // Data Quality Rules for the selected entity
+    dataQualityRules: DataQualityRule[];
+    dqRulesLoading: boolean;
+    dqRulesError: string | null;
+
     // Connection settings dialog
     configDialogOpen: boolean;
 
@@ -389,6 +400,9 @@ interface ExpressionState {
     loadEntities: () => Promise<void>;
     selectEntity: (name: string) => Promise<void>;
     loadNodeChildren: (nodeValue: string) => Promise<void>;
+    loadDataQualityRules: () => Promise<void>;
+    /** Split a DQR clause on WHEN and load it into both roots */
+    loadDqrClause: (clause: string) => void;
     openConfigDialog: () => void;
     closeConfigDialog: () => void;
     /** Persist connection settings to browser storage and reconnect */
@@ -453,6 +467,10 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
     attributesLoading: false,
     attributesError: null,
 
+    dataQualityRules: [],
+    dqRulesLoading: false,
+    dqRulesError: null,
+
     configDialogOpen: false,
     openConfigDialog: () => set({ configDialogOpen: true }),
     closeConfigDialog: () => set({ configDialogOpen: false }),
@@ -506,6 +524,7 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
             const entry = ATTRIBUTE_CATALOGS[key];
             if (!entry) return;
             attributeRequestId++; // cancel any in-flight API load
+            dqRuleRequestId++; // cancel any in-flight DQR load
             set({
                 selectedEntityName: name,
                 attributesLoading: false,
@@ -513,6 +532,9 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
                 activeCatalogKey: key,
                 activeCatalog: entry.catalog,
                 flatAttributes: flattenAttributes(entry.catalog),
+                dataQualityRules: [],
+                dqRulesLoading: false,
+                dqRulesError: null,
             });
             return;
         }
@@ -539,6 +561,41 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
                 attributesLoading: false,
                 attributesError: (e as Error).message,
             });
+        }
+        void get().loadDataQualityRules();
+    },
+
+    loadDataQualityRules: async () => {
+        const name = get().selectedEntityName;
+        if (!name || name.startsWith(DEMO_PREFIX)) return;
+        const entity = get().entities.find((e) => e.name === name);
+        if (!entity) return;
+        const reqId = ++dqRuleRequestId;
+        set({ dqRulesLoading: true, dqRulesError: null });
+        try {
+            const rules = await fetchDataQualityRules(entity.uid);
+            if (reqId !== dqRuleRequestId) return; // stale response
+            set({ dataQualityRules: rules, dqRulesLoading: false });
+        } catch (e) {
+            if (reqId !== dqRuleRequestId) return;
+            set({
+                dataQualityRules: [],
+                dqRulesLoading: false,
+                dqRulesError: (e as Error).message,
+            });
+        }
+    },
+
+    loadDqrClause: (clause) => {
+        const { main, when, isConstraint } = splitDqrClause(clause);
+        try {
+            const mainBlock = parseExpressionToBlock(main);
+            if (mainBlock) get().setRoot(0, mainBlock);
+            get().setRoot(1, when ? parseExpressionToBlock(when) : null);
+            get().setIsConstraint(isConstraint);
+            set({ dqRulesError: null });
+        } catch (e) {
+            set({ dqRulesError: (e as Error).message });
         }
     },
 

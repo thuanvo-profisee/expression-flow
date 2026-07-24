@@ -45,6 +45,26 @@ export interface EntityOption {
     name: string;
 }
 
+interface RawDataQualityRule {
+    id: string;
+    entityId: MemberIdentifier;
+    attributeId: MemberIdentifier | null;
+    isEnabled: boolean;
+    displayText: string | null;
+    clauses: { id: string; name: string }[];
+    triggeringAction: number;
+}
+
+export interface DataQualityRule {
+    id: string;
+    entityName: string;
+    attributeName: string | null;
+    isEnabled: boolean;
+    displayText: string | null;
+    /** Expression code, e.g. [Color].[Code]="Hello" */
+    clauses: string[];
+}
+
 // ─── Fetch helper ────────────────────────────────────────────────
 
 /** Resolve REST base URL + headers from stored config (proxy fallback) */
@@ -109,6 +129,23 @@ export async function fetchEntities(): Promise<EntityOption[]> {
 export async function testConnection(cfg: ProfiseeConfig): Promise<number> {
     const raw = await apiGet<RawEntity[]>("/Entities", cfg);
     return mapEntities(raw).length;
+}
+
+/** Fetch the Data Quality Rules defined for an entity */
+export async function fetchDataQualityRules(
+    entityUid: string,
+): Promise<DataQualityRule[]> {
+    const raw = await apiGet<RawDataQualityRule[]>(
+        `/DataQualityRules?entityUid=${encodeURIComponent(entityUid)}`,
+    );
+    return raw.map((r) => ({
+        id: r.id,
+        entityName: r.entityId.name ?? "",
+        attributeName: r.attributeId?.name ?? null,
+        isEnabled: r.isEnabled,
+        displayText: r.displayText,
+        clauses: r.clauses.map((c) => c.name.trim()).filter(Boolean),
+    }));
 }
 
 function mapEntities(raw: RawEntity[]): EntityOption[] {

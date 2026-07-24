@@ -18,8 +18,12 @@ import {
     AlertTriangle,
     RefreshCw,
     Settings,
+    ShieldAlert,
+    MousePointerClick,
+    Ban,
 } from "lucide-react";
-import type { DragItem, AttributeNode, Block } from "../types";
+import type { DragItem, AttributeNode, Block, BlockConfig } from "../types";
+import { splitDqrClause } from "../parser";
 import {
     ATTRIBUTE_CATALOGS,
     ATTRIBUTE_CATALOG_KEYS,
@@ -598,31 +602,57 @@ function CollapsibleSection({
     label,
     count,
     defaultOpen = false,
+    onReload,
+    reloading,
     children,
 }: {
     icon: React.ReactNode;
     label: string;
     count?: number;
     defaultOpen?: boolean;
+    onReload?: () => void;
+    reloading?: boolean;
     children: React.ReactNode;
 }) {
     const [open, setOpen] = useState(defaultOpen);
 
     return (
         <div>
-            <button
-                onClick={() => setOpen(!open)}
-                className="flex items-center gap-1.5 w-full text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 hover:text-slate-700 transition-colors"
-            >
-                {open ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
-                {icon}
-                <span>{label}</span>
-                {count != null && (
-                    <span className="text-slate-300 ml-auto font-normal normal-case">
-                        {count}
-                    </span>
+            <div className="flex items-center gap-1.5 w-full mb-1">
+                <button
+                    onClick={() => setOpen(!open)}
+                    className="flex items-center gap-1.5 flex-1 min-w-0 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-700 transition-colors"
+                >
+                    {open ? (
+                        <ChevronDown size={10} />
+                    ) : (
+                        <ChevronRight size={10} />
+                    )}
+                    {icon}
+                    <span className="truncate">{label}</span>
+                    {count != null && (
+                        <span className="text-slate-300 font-normal normal-case shrink-0">
+                            {count}
+                        </span>
+                    )}
+                </button>
+                {onReload && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onReload();
+                        }}
+                        disabled={reloading}
+                        title="Reload"
+                        className="p-0.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 disabled:opacity-50 transition-colors shrink-0"
+                    >
+                        <RefreshCw
+                            size={10}
+                            className={reloading ? "animate-spin" : ""}
+                        />
+                    </button>
                 )}
-            </button>
+            </div>
             {open && <div className="mb-2">{children}</div>}
         </div>
     );
@@ -927,6 +957,129 @@ function GeneratedPanel({
     );
 }
 
+// ─── Data Quality Rules ──────────────────────────────────────────
+
+function DataQualityRulesSection({
+    blockConfigs,
+}: {
+    blockConfigs: BlockConfig[];
+}) {
+    const rules = useExpressionStore((s) => s.dataQualityRules);
+    const loading = useExpressionStore((s) => s.dqRulesLoading);
+    const error = useExpressionStore((s) => s.dqRulesError);
+    const reload = useExpressionStore((s) => s.loadDataQualityRules);
+    const loadDqrClause = useExpressionStore((s) => s.loadDqrClause);
+    const mainLabel = blockConfigs[0]?.name ?? "Main";
+    const whenLabel = blockConfigs[1]?.name ?? "When";
+
+    return (
+        <CollapsibleSection
+            icon={<ShieldAlert size={10} />}
+            label="Data Quality Rules"
+            count={rules.length}
+            onReload={() => void reload()}
+            reloading={loading}
+        >
+            {loading ? (
+                <div className="flex items-center gap-1.5 px-1 py-2 text-[10px] text-slate-400">
+                    <Loader2 size={12} className="text-blue-400 animate-spin" />
+                    Loading rules…
+                </div>
+            ) : error ? (
+                <div className="flex items-start gap-1.5 px-2 py-1.5 rounded-md bg-rose-50 border border-rose-200">
+                    <AlertTriangle
+                        size={10}
+                        className="text-rose-400 shrink-0 mt-0.5"
+                    />
+                    <div className="min-w-0">
+                        <div className="text-[9px] text-rose-600 break-words">
+                            {error}
+                        </div>
+                        <button
+                            onClick={() => void reload()}
+                            className="flex items-center gap-1 mt-0.5 text-[9px] font-semibold text-rose-500 hover:text-rose-700 transition-colors"
+                        >
+                            <RefreshCw size={9} />
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            ) : rules.length === 0 ? (
+                <div className="text-[10px] text-slate-300 italic px-1 py-2">
+                    No data quality rules
+                </div>
+            ) : (
+                <div className="space-y-1.5">
+                    {rules.map((rule) => (
+                        <div
+                            key={rule.id}
+                            className="rounded-md border border-slate-200 bg-white p-1.5"
+                        >
+                            <div className="flex items-center gap-1 mb-1">
+                                {!rule.isEnabled && (
+                                    <Ban
+                                        size={9}
+                                        className="text-slate-300 shrink-0"
+                                        aria-label="Disabled"
+                                    />
+                                )}
+                                <span className="text-[10px] font-semibold text-slate-600 truncate">
+                                    {rule.displayText ??
+                                        rule.attributeName ??
+                                        "Rule"}
+                                </span>
+                            </div>
+                            {rule.clauses.map((clause, i) => {
+                                const parsed = splitDqrClause(clause);
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() =>
+                                            loadDqrClause(clause)
+                                        }
+                                        title="Click to load into canvas"
+                                        className="w-full text-left mb-1 last:mb-0 rounded border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 transition-colors px-1.5 py-1 group"
+                                    >
+                                        <div className="flex items-start gap-1">
+                                            <span className="text-[8px] font-semibold text-slate-400 shrink-0 w-[52px] truncate">
+                                                {mainLabel}
+                                            </span>
+                                            <pre className="flex-1 min-w-0 text-[9px] text-slate-500 whitespace-pre-wrap font-mono leading-relaxed">
+                                                {parsed.main}
+                                            </pre>
+                                        </div>
+                                        {parsed.when && (
+                                            <div className="flex items-start gap-1 mt-0.5">
+                                                <span className="text-[8px] font-semibold text-slate-400 shrink-0 w-[52px] truncate">
+                                                    {whenLabel}
+                                                </span>
+                                                <pre className="flex-1 min-w-0 text-[9px] text-slate-500 whitespace-pre-wrap font-mono leading-relaxed">
+                                                    {parsed.when}
+                                                </pre>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            {parsed.isConstraint && (
+                                                <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-amber-100 text-amber-600">
+                                                    Constraint
+                                                </span>
+                                            )}
+                                            <span className="flex items-center gap-0.5 text-[8px] font-semibold text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
+                                                <MousePointerClick size={8} />
+                                                Load
+                                            </span>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </CollapsibleSection>
+    );
+}
+
 // ─── Attributes Panel (Right) ───────────────────────────────────
 
 const MIN_WIDTH = 250;
@@ -1041,8 +1194,21 @@ export function AttributesPanel() {
             {/* Entity Picker — hidden when generated panel is expanded */}
             {!generatedExpanded && (
                 <div className="px-3 py-2 border-b border-slate-200 bg-slate-50/80">
-                    <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                        Entity
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+                            Entity
+                        </span>
+                        <button
+                            onClick={() => void loadEntities()}
+                            disabled={entitiesLoading}
+                            title="Reload entities"
+                            className="ml-auto p-0.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 disabled:opacity-50 transition-colors"
+                        >
+                            <RefreshCw
+                                size={10}
+                                className={entitiesLoading ? "animate-spin" : ""}
+                            />
+                        </button>
                     </div>
                     <EntityDropdown
                         options={entityOptions}
@@ -1094,6 +1260,9 @@ export function AttributesPanel() {
                         <CustomValueInput />
                     </CollapsibleSection>
 
+                    {/* Data Quality Rules — collapsible */}
+                    <DataQualityRulesSection blockConfigs={blockConfigs} />
+
                     {/* Break line */}
                     <div className="h-px bg-slate-200 w-full" />
 
@@ -1118,6 +1287,11 @@ export function AttributesPanel() {
                         label="Attributes"
                         count={activeCatalog.length}
                         defaultOpen
+                        onReload={() =>
+                            selectedEntityName &&
+                            void selectEntity(selectedEntityName)
+                        }
+                        reloading={attributesLoading}
                     >
                         {attributesLoading ? (
                             <div className="flex items-center gap-1.5 px-1 py-2 text-[10px] text-slate-400">
