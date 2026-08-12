@@ -15,6 +15,7 @@ import { ChevronDown, ChevronUp, Settings2 } from "lucide-react";
 import { useExpressionStore, setReactFlowInstance } from "../store";
 import type { Block, BlockConfig } from "../types";
 import { RootNode } from "./RootNode";
+import { SaveRulePanel } from "./SaveRulePanel";
 
 function buildNodes(
     roots: (Block | null)[],
@@ -126,6 +127,11 @@ export function ExpressionCanvas() {
                     className="!bg-white !border-slate-200 !shadow-lg !rounded-xl"
                     position={"bottom-right"}
                 />
+
+                {/* Save-to-Profisee card */}
+                <Panel position="top-right" className="!mt-4 !mr-4">
+                    <SaveRulePanel />
+                </Panel>
 
                 {/* Floating options card */}
                 <Panel position="bottom-center" className="!mb-4">

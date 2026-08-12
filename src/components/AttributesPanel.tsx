@@ -441,8 +441,7 @@ function EntityDropdown({
             }
         };
         document.addEventListener("pointerdown", handler, true);
-        return () =>
-            document.removeEventListener("pointerdown", handler, true);
+        return () => document.removeEventListener("pointerdown", handler, true);
     }, [isOpen]);
 
     const select = useCallback(
@@ -713,8 +712,7 @@ function ExpressionTreeNode({
     const focusBlock = useExpressionStore((s) => s.focusBlock);
     const focusedBlockId = useExpressionStore((s) => s.focusedBlockId);
     const filledArgs = block.args.filter(Boolean) as Block[];
-    const hasChildren =
-        block.type === "FUNCTION" && filledArgs.length > 0;
+    const hasChildren = block.type === "FUNCTION" && filledArgs.length > 0;
     const meta = FUNCTION_REGISTRY[block.name];
     const isActive = focusedBlockId === block.id;
 
@@ -737,10 +735,7 @@ function ExpressionTreeNode({
                         className="p-0.5 rounded hover:bg-slate-200/60 transition-colors shrink-0"
                     >
                         {expanded ? (
-                            <ChevronDown
-                                size={10}
-                                className="text-slate-400"
-                            />
+                            <ChevronDown size={10} className="text-slate-400" />
                         ) : (
                             <ChevronRight
                                 size={10}
@@ -777,9 +772,7 @@ function ExpressionTreeNode({
                     }`}
                 >
                     {getNodeIcon(block)}
-                    <span className="truncate">
-                        {getNodeLabel(block)}
-                    </span>
+                    <span className="truncate">{getNodeLabel(block)}</span>
                 </button>
 
                 {/* Children count badge */}
@@ -818,7 +811,13 @@ function ExpressionTreeNode({
     );
 }
 
-function ExpressionTreeView({ root, expanded }: { root: Block | null; expanded?: boolean }) {
+function ExpressionTreeView({
+    root,
+    expanded,
+}: {
+    root: Block | null;
+    expanded?: boolean;
+}) {
     if (!root) {
         return (
             <div className="text-[10px] text-slate-300 italic px-1 py-2">
@@ -827,9 +826,11 @@ function ExpressionTreeView({ root, expanded }: { root: Block | null; expanded?:
         );
     }
     return (
-        <div className={`bg-white border border-slate-200 rounded-lg p-2 overflow-auto space-y-0.5 ${
-            expanded ? "" : "max-h-60"
-        }`}>
+        <div
+            className={`bg-white border border-slate-200 rounded-lg p-2 overflow-auto space-y-0.5 ${
+                expanded ? "" : "max-h-60"
+            }`}
+        >
             <ExpressionTreeNode block={root} depth={0} />
         </div>
     );
@@ -853,9 +854,11 @@ function GeneratedPanel({
     const [viewMode, setViewMode] = useState<GeneratedViewMode>("code");
 
     return (
-        <div className={`border-t border-slate-200 bg-slate-50 ${
-            isExpanded ? "flex-1 flex flex-col overflow-hidden" : ""
-        }`}>
+        <div
+            className={`border-t border-slate-200 bg-slate-50 ${
+                isExpanded ? "flex-1 flex flex-col overflow-hidden" : ""
+            }`}
+        >
             {/* Header with toggle */}
             <div className="flex items-center gap-1.5 px-3 py-2">
                 <Code2 size={12} className="text-slate-500" />
@@ -866,12 +869,20 @@ function GeneratedPanel({
                 <button
                     onClick={onToggleExpand}
                     className="ml-auto p-1 rounded hover:bg-slate-200/80 transition-colors group/exp"
-                    title={isExpanded ? "Collapse panel" : "Expand to full panel"}
+                    title={
+                        isExpanded ? "Collapse panel" : "Expand to full panel"
+                    }
                 >
                     {isExpanded ? (
-                        <Minimize2 size={12} className="text-slate-400 group-hover/exp:text-slate-600" />
+                        <Minimize2
+                            size={12}
+                            className="text-slate-400 group-hover/exp:text-slate-600"
+                        />
                     ) : (
-                        <Maximize2 size={12} className="text-slate-400 group-hover/exp:text-slate-600" />
+                        <Maximize2
+                            size={12}
+                            className="text-slate-400 group-hover/exp:text-slate-600"
+                        />
                     )}
                 </button>
                 {/* View mode toggle */}
@@ -912,19 +923,19 @@ function GeneratedPanel({
             </div>
 
             {/* Content */}
-            <div className={`px-3 pb-3 space-y-2 ${
-                isExpanded ? "flex-1 overflow-y-auto sidebar-scroll" : ""
-            }`}>
+            <div
+                className={`px-3 pb-3 space-y-2 ${
+                    isExpanded ? "flex-1 overflow-y-auto sidebar-scroll" : ""
+                }`}
+            >
                 {roots.map((root, idx) => {
                     const cfg = blockConfigs[idx];
-                    const isValidation =
-                        cfg?.expressionMode === "validation";
+                    const isValidation = cfg?.expressionMode === "validation";
                     return (
                         <div key={idx}>
                             <div className="flex items-center gap-1.5 mb-0.5">
                                 <span className="text-[9px] font-semibold text-slate-400 truncate">
-                                    {cfg?.name ??
-                                        `Expression ${idx + 1}`}
+                                    {cfg?.name ?? `Expression ${idx + 1}`}
                                 </span>
                                 <span
                                     className={`
@@ -941,13 +952,18 @@ function GeneratedPanel({
                             </div>
 
                             {viewMode === "code" ? (
-                                <pre className={`text-[10px] text-slate-600 bg-white border border-slate-200 rounded-lg p-2 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto ${
-                                    isExpanded ? "" : "max-h-24"
-                                }`}>
+                                <pre
+                                    className={`text-[10px] text-slate-600 bg-white border border-slate-200 rounded-lg p-2 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto ${
+                                        isExpanded ? "" : "max-h-24"
+                                    }`}
+                                >
                                     {generateCode(root)}
                                 </pre>
                             ) : (
-                                <ExpressionTreeView root={root} expanded={isExpanded} />
+                                <ExpressionTreeView
+                                    root={root}
+                                    expanded={isExpanded}
+                                />
                             )}
                         </div>
                     );
@@ -1029,13 +1045,20 @@ function DataQualityRulesSection({
                                         "Rule"}
                                 </span>
                             </div>
-                            {rule.clauses.map((clause, i) => {
-                                const parsed = splitDqrClause(clause);
+                            {rule.clauses.map((clause) => {
+                                const parsed = splitDqrClause(clause.text);
                                 return (
                                     <button
-                                        key={i}
+                                        key={clause.id}
                                         onClick={() =>
-                                            loadDqrClause(clause)
+                                            loadDqrClause(clause.text, {
+                                                ruleId: rule.id,
+                                                clauseId: clause.id,
+                                                attributeName:
+                                                    rule.attributeName,
+                                                displayText: rule.displayText,
+                                                isEnabled: rule.isEnabled,
+                                            })
                                         }
                                         title="Click to load into canvas"
                                         className="w-full text-left mb-1 last:mb-0 rounded border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 transition-colors px-1.5 py-1 group"
@@ -1206,7 +1229,9 @@ export function AttributesPanel() {
                         >
                             <RefreshCw
                                 size={10}
-                                className={entitiesLoading ? "animate-spin" : ""}
+                                className={
+                                    entitiesLoading ? "animate-spin" : ""
+                                }
                             />
                         </button>
                     </div>

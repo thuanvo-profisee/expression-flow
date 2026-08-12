@@ -18,8 +18,15 @@ import {
     fetchEntities,
     fetchEntityAttributes,
     fetchDataQualityRules,
+    saveDataQualityRules,
+    EMPTY_GUID,
 } from "./api/profisee";
-import type { EntityOption, DataQualityRule } from "./api/profisee";
+import type {
+    EntityOption,
+    DataQualityRule,
+    RuleClauseInput,
+    SaveRuleInput,
+} from "./api/profisee";
 import { parseExpressionToBlock, splitDqrClause } from "./parser";
 import { loadStoredConfig, saveStoredConfig } from "./api/config";
 import type { ProfiseeConfig } from "./api/config";
@@ -357,6 +364,130 @@ function patchAttributeNode(
 let attributeRequestId = 0;
 let dqRuleRequestId = 0;
 
+// ─── Rule save target ────────────────────────────────────────────
+
+/** Identifies the platform rule/clause a loaded clause came from */
+export interface RuleTarget {
+    ruleId?: string | null;
+    clauseId?: string | null;
+    attributeName?: string | null;
+    displayText?: string | null;
+    isEnabled?: boolean;
+}
+
+/** Treat a missing or empty GUID as "no id yet" */
+function normalizeId(id: string | null | undefined): string | null {
+    return !id || id === EMPTY_GUID ? null : id;
+}
+
+/**
+ * Attribute name for a bracket path, e.g. "[Name]" → "Name".
+ * Rules attach to a single attribute of the entity, so multi-level paths
+ * like "[Class].[Name]" are not valid targets and yield null.
+ */
+export function attributeNameFromPath(path: string): string | null {
+    const segments = path.split(".");
+    if (segments.length !== 1) return null;
+    const name = segments[0].replace(/^\[|\]$/g, "").trim();
+    return name || null;
+}
+
+/** Save-target fields reset whenever the selected entity changes */
+const CLEARED_RULE_TARGET = {
+    ruleId: null,
+    ruleClauseId: null,
+    ruleAttributeName: null,
+    ruleDisplayText: "",
+    ruleIsEnabled: true,
+    ruleSaveError: null,
+    ruleSavedAt: null,
+} as const;
+
+/**
+ * Display text used when the user hasn't typed one: the clause as written,
+ * i.e. the main expression plus its WHEN guard.
+ */
+export function defaultRuleDisplayText(
+    main: string,
+    when?: string | null,
+): string {
+    const mainText = main.trim();
+    const whenText = when?.trim();
+    if (!mainText || mainText === "/* empty */") return "";
+    return whenText && whenText !== "/* empty */"
+        ? `${mainText} WHEN ${whenText}`
+        : mainText;
+}
+
+/** The slice of store state a save reads — kept separate so it can be tested */
+export interface SaveRuleContext {
+    selectedEntityName: string | null;
+    entities: EntityOption[];
+    blockConfigs: BlockConfig[];
+    roots: (Block | null)[];
+    generatedCodes: string[];
+    isConstraint: boolean;
+    ruleId: string | null;
+    ruleClauseId: string | null;
+    ruleAttributeName: string | null;
+    ruleDisplayText: string;
+    ruleIsEnabled: boolean;
+}
+
+/**
+ * Map the canvas onto a PUT /Rules input.
+ * Returns an error message (string) when the canvas isn't saveable yet —
+ * an incomplete expression must never reach the platform.
+ */
+export function buildSaveInput(ctx: SaveRuleContext): SaveRuleInput | string {
+    const entityName = ctx.selectedEntityName;
+    if (!entityName || entityName.startsWith(DEMO_PREFIX)) {
+        return "Select a Profisee entity before saving — demo catalogs are local only.";
+    }
+
+    const mainLabel = ctx.blockConfigs[0]?.name ?? "Main";
+    const whenLabel = ctx.blockConfigs[1]?.name ?? "When";
+
+    if (!ctx.roots[0]) return `The ${mainLabel} expression is empty.`;
+    const main = ctx.generatedCodes[0] ?? "";
+    if (main.includes("/* empty */")) {
+        return `Fill every slot in the ${mainLabel} expression before saving.`;
+    }
+
+    const when = ctx.roots[1] ? (ctx.generatedCodes[1] ?? "") : "";
+    if (when.includes("/* empty */")) {
+        return `Fill every slot in the ${whenLabel} expression before saving.`;
+    }
+
+    const clause: RuleClauseInput = {
+        id: ctx.ruleClauseId,
+        whatExpression: main,
+        // No display text typed → fall back to the clause itself, so the rule
+        // still reads as something in the platform's rule list
+        whatDisplayText:
+            ctx.ruleDisplayText.trim() || defaultRuleDisplayText(main, when),
+        whenExpression: when || null,
+    };
+
+    // Block 0's return type decides which clause list the rule uses
+    const isValidation =
+        (ctx.blockConfigs[0]?.expressionMode ?? "validation") === "validation";
+    const entity = ctx.entities.find((e) => e.name === entityName);
+
+    return {
+        id: ctx.ruleId,
+        entity: { name: entityName, id: entity?.uid ?? null },
+        attribute: ctx.ruleAttributeName
+            ? { name: ctx.ruleAttributeName }
+            : null,
+        isEnabled: ctx.ruleIsEnabled,
+        validationClauses: isValidation
+            ? [{ ...clause, isConstraint: ctx.isConstraint }]
+            : [],
+        assignmentClauses: isValidation ? [] : [clause],
+    };
+}
+
 // ─── Store Interface ─────────────────────────────────────────────
 
 interface ExpressionState {
@@ -385,6 +516,21 @@ interface ExpressionState {
     dqRulesLoading: boolean;
     dqRulesError: string | null;
 
+    // Save target — which rule/clause the canvas will be written back to
+    /** Rule being edited; null → save creates a new rule */
+    ruleId: string | null;
+    /** Clause being edited; null → save creates a new clause */
+    ruleClauseId: string | null;
+    /** Attribute the rule is attached to, by name (e.g. "Name") */
+    ruleAttributeName: string | null;
+    /** whatDisplayText sent with the clause */
+    ruleDisplayText: string;
+    ruleIsEnabled: boolean;
+    ruleSaving: boolean;
+    ruleSaveError: string | null;
+    /** Set on a successful save so the UI can show a confirmation */
+    ruleSavedAt: number | null;
+
     // Connection settings dialog
     configDialogOpen: boolean;
 
@@ -401,8 +547,18 @@ interface ExpressionState {
     selectEntity: (name: string) => Promise<void>;
     loadNodeChildren: (nodeValue: string) => Promise<void>;
     loadDataQualityRules: () => Promise<void>;
-    /** Split a DQR clause on WHEN and load it into both roots */
-    loadDqrClause: (clause: string) => void;
+    /**
+     * Split a DQR clause on WHEN and load it into both roots.
+     * Passing `target` also points subsequent saves at that rule/clause.
+     */
+    loadDqrClause: (clause: string, target?: RuleTarget) => void;
+    setRuleAttributeName: (name: string | null) => void;
+    setRuleDisplayText: (text: string) => void;
+    setRuleIsEnabled: (value: boolean) => void;
+    /** Forget the loaded rule/clause so the next save creates a new one */
+    startNewRule: () => void;
+    /** Write the canvas back to the platform (PUT /Rules) */
+    saveRule: () => Promise<void>;
     openConfigDialog: () => void;
     closeConfigDialog: () => void;
     /** Persist connection settings to browser storage and reconnect */
@@ -471,6 +627,15 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
     dqRulesLoading: false,
     dqRulesError: null,
 
+    ruleId: null,
+    ruleClauseId: null,
+    ruleAttributeName: null,
+    ruleDisplayText: "",
+    ruleIsEnabled: true,
+    ruleSaving: false,
+    ruleSaveError: null,
+    ruleSavedAt: null,
+
     configDialogOpen: false,
     openConfigDialog: () => set({ configDialogOpen: true }),
     closeConfigDialog: () => set({ configDialogOpen: false }),
@@ -535,6 +700,7 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
                 dataQualityRules: [],
                 dqRulesLoading: false,
                 dqRulesError: null,
+                ...CLEARED_RULE_TARGET,
             });
             return;
         }
@@ -544,6 +710,8 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
             selectedEntityName: name,
             attributesLoading: true,
             attributesError: null,
+            // Rule ids belong to the previous entity — drop the save target
+            ...CLEARED_RULE_TARGET,
         });
         try {
             const catalog = await fetchEntityAttributes(name);
@@ -586,7 +754,7 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
         }
     },
 
-    loadDqrClause: (clause) => {
+    loadDqrClause: (clause, target) => {
         const { main, when, isConstraint } = splitDqrClause(clause);
         try {
             const mainBlock = parseExpressionToBlock(main);
@@ -594,8 +762,51 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
             get().setRoot(1, when ? parseExpressionToBlock(when) : null);
             get().setIsConstraint(isConstraint);
             set({ dqRulesError: null });
+            if (target) {
+                set({
+                    ruleId: normalizeId(target.ruleId),
+                    ruleClauseId: normalizeId(target.clauseId),
+                    ruleAttributeName: target.attributeName ?? null,
+                    ruleDisplayText: target.displayText ?? "",
+                    ruleIsEnabled: target.isEnabled ?? true,
+                    ruleSaveError: null,
+                    ruleSavedAt: null,
+                });
+            }
         } catch (e) {
             set({ dqRulesError: (e as Error).message });
+        }
+    },
+
+    setRuleAttributeName: (name) => set({ ruleAttributeName: name }),
+    setRuleDisplayText: (text) => set({ ruleDisplayText: text }),
+    setRuleIsEnabled: (value) => set({ ruleIsEnabled: value }),
+
+    startNewRule: () =>
+        set({
+            ruleId: null,
+            ruleClauseId: null,
+            ruleDisplayText: "",
+            ruleIsEnabled: true,
+            ruleSaveError: null,
+            ruleSavedAt: null,
+        }),
+
+    saveRule: async () => {
+        const state = get();
+        const input = buildSaveInput(state);
+        if (typeof input === "string") {
+            set({ ruleSaveError: input, ruleSavedAt: null });
+            return;
+        }
+        set({ ruleSaving: true, ruleSaveError: null, ruleSavedAt: null });
+        try {
+            await saveDataQualityRules([input]);
+            set({ ruleSaving: false, ruleSavedAt: Date.now() });
+            // Pull the rules back so the panel shows what the platform stored
+            await get().loadDataQualityRules();
+        } catch (e) {
+            set({ ruleSaving: false, ruleSaveError: (e as Error).message });
         }
     },
 

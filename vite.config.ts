@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
   const apiKey = env.PROFISEE_API_KEY ?? env.QA_CLIENT_ID ?? ''
 
   return {
+    base: "/expression-flow/",
     plugins: [react(), tailwindcss()],
     server: {
       // Respect PORT when set (e.g. by preview tooling); default 5173
