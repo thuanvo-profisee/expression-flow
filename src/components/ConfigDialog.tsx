@@ -16,9 +16,9 @@ import { testConnection } from "../api/profisee";
 
 /**
  * Connection settings popup — asks for the Profisee instance URL and
- * API key, verifies them against the server, and stores them in the
- * browser's local storage. Opens automatically when no connection is
- * configured (or the server rejects the key), and manually via the
+ * member client ID, verifies them against the server, and stores them in
+ * the browser's local storage. Opens automatically when no connection is
+ * configured (or the server rejects the ID), and manually via the
  * gear button in the Data & Values panel.
  */
 export function ConfigDialog() {
@@ -131,18 +131,18 @@ function ConfigDialogForm() {
                         />
                     </div>
 
-                    {/* API Key */}
+                    {/* Client ID */}
                     <div>
                         <label className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
                             <KeyRound size={10} />
-                            API Key
+                            Client ID
                         </label>
                         <div className="relative">
                             <input
                                 type={showKey ? "text" : "password"}
                                 value={apiKey}
                                 onChange={(e) => setApiKey(e.target.value)}
-                                placeholder="Unattended client ID"
+                                placeholder="Member client ID"
                                 className="
                   w-full pl-2.5 pr-8 py-1.5 rounded-md
                   border border-slate-200 bg-white
@@ -154,7 +154,11 @@ function ConfigDialogForm() {
                             <button
                                 onClick={() => setShowKey((v) => !v)}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
-                                title={showKey ? "Hide key" : "Show key"}
+                                title={
+                                    showKey
+                                        ? "Hide client ID"
+                                        : "Show client ID"
+                                }
                                 tabIndex={-1}
                             >
                                 {showKey ? (
@@ -164,9 +168,18 @@ function ConfigDialogForm() {
                                 )}
                             </button>
                         </div>
-                        <p className="text-[9px] text-slate-400 mt-1">
-                            The unattended-authentication client ID, sent as
-                            the X-Api-Key header.
+                        <p className="text-[9px] text-slate-400 mt-1 leading-relaxed">
+                            To find it, open{" "}
+                            <span className="text-slate-500 font-semibold">
+                                Account &amp; Team
+                            </span>{" "}
+                            in Profisee{" "}
+                            <span className="text-slate-500 font-semibold">
+                                Administration
+                            </span>
+                            , then open the member you want Expression Flow to
+                            work with — its client ID is sent as the X-Api-Key
+                            header.
                         </p>
                     </div>
 

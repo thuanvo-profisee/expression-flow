@@ -123,7 +123,7 @@ async function apiRequest<T>(
             /* non-JSON error body */
         }
         if (res.status === 401) {
-            detail = detail || "Missing or invalid API key";
+            detail = detail || "Missing or invalid client ID";
         }
         throw new Error(
             `Profisee API ${res.status}${detail ? ` — ${detail}` : ""}`,
