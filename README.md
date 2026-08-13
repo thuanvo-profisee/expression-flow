@@ -48,6 +48,27 @@ is rebuilt from its related Class and Color names whenever it doesn't already ma
 
 ![Change To scenario](docs/images/change-to.png)
 
+## Saving rules back to Profisee
+
+With a live instance connected, the canvas isn't a scratchpad — the rule you build
+is written to the platform as a real Data Quality Rule. Pick the attribute it
+attaches to, give data stewards a display text, and create it:
+
+![Saving a rule to Profisee](docs/images/dqr-save.png)
+
+The rule is created against the selected entity and confirmed in place:
+
+<div align="center">
+  <img src="docs/images/dqr-saved.png" alt="Rule saved to Profisee" width="900">
+</div>
+
+Rules already defined on the entity are listed in the **Data Quality Rules**
+section, loaded live from the instance alongside its attributes:
+
+<div align="center">
+  <img src="docs/images/dqr-list.png" alt="Data Quality Rules list" width="380">
+</div>
+
 ## A closer look
 
 <table>
