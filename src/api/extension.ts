@@ -10,6 +10,7 @@ interface ChromeApi {
         request(permissions: { origins: string[] }): Promise<boolean>;
     };
     runtime?: {
+        getManifest(): { version: string };
         getURL(path: string): string;
         getContexts(filter: {
             contextTypes: string[];
@@ -46,6 +47,11 @@ export async function requestHostAccess(instanceUrl: string): Promise<void> {
     if (!granted) {
         throw new Error(`Access to ${origin} was not granted`);
     }
+}
+
+/** Installed extension version; null outside the extension */
+export function extensionVersion(): string | null {
+    return chromeApi()?.runtime?.getManifest?.().version ?? null;
 }
 
 /** Focus the open app tab, or open a new one */

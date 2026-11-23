@@ -29,6 +29,7 @@ import {
 import type { SavedInstance } from "../api/instances";
 import { testConnection } from "../api/profisee";
 import { openAppTab, requestHostAccess } from "../api/extension";
+import { UpdateNotice } from "../components/UpdateNotice";
 
 /** Form values; id is null for an instance not saved yet */
 interface FormState extends ProfiseeConfig {
@@ -217,6 +218,7 @@ export function Popup() {
                     Expression Flow
                 </h1>
             </div>
+            <UpdateNotice />
 
             {/* Saved instances */}
             <div className="px-4 pt-3">

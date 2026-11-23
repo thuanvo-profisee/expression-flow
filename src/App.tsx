@@ -3,6 +3,7 @@ import { FunctionsPanel } from "./components/FunctionsPanel";
 import { AttributesPanel } from "./components/AttributesPanel";
 import { ExpressionCanvas } from "./components/ExpressionCanvas";
 import { ConfigDialog } from "./components/ConfigDialog";
+import { UpdateNotice } from "./components/UpdateNotice";
 import { subscribeStoredConfig } from "./api/config";
 import { useExpressionStore } from "./store";
 
@@ -18,10 +19,13 @@ function App() {
     );
 
     return (
-        <div className="flex h-screen w-screen overflow-hidden bg-slate-100">
-            <FunctionsPanel />
-            <ExpressionCanvas />
-            <AttributesPanel />
+        <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100">
+            <UpdateNotice />
+            <div className="flex flex-1 min-h-0">
+                <FunctionsPanel />
+                <ExpressionCanvas />
+                <AttributesPanel />
+            </div>
             <ConfigDialog />
         </div>
     );
