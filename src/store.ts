@@ -12,6 +12,7 @@ import {
     FUNCTION_REGISTRY,
     ATTRIBUTE_CATALOGS,
     flattenAttributes,
+    infixPrecedence,
 } from "./types";
 import type { ReactFlowInstance } from "@xyflow/react";
 import {
@@ -24,6 +25,7 @@ import {
 import type {
     EntityOption,
     DataQualityRule,
+    DataQualityRuleClause,
     RuleClauseInput,
     SaveRuleInput,
 } from "./api/profisee";
@@ -132,6 +134,27 @@ function removeFromTree(node: Block, targetId: string): Block {
 
 // ─── Code Generator ──────────────────────────────────────────────
 
+/**
+ * Code for one operand of an infix operator, in parentheses when the
+ * operand is itself an infix operator that would otherwise re-parse
+ * differently: it binds looser than the parent, or equally on the right
+ * (operators are left-associative, so "[A] - ([B] - [C])" keeps them).
+ */
+function infixOperandCode(
+    parentOp: string,
+    child: Block | null,
+    isRightSide: boolean,
+): string {
+    const code = generateCode(child);
+    if (child?.type !== "FUNCTION" || !FUNCTION_REGISTRY[child.name]?.isInfix) {
+        return code;
+    }
+    const parent = infixPrecedence(parentOp);
+    const own = infixPrecedence(child.name);
+    const wrap = own < parent || (own === parent && isRightSide);
+    return wrap ? `(${code})` : code;
+}
+
 export function generateCode(block: Block | null): string {
     if (!block) return "/* empty */";
 
@@ -157,14 +180,16 @@ export function generateCode(block: Block | null): string {
 
     // Variadic infix operators (e.g. &): val1 OP val2 OP val3 ...
     if (meta?.isInfix && meta?.variadic) {
-        const filled = block.args.filter(Boolean).map((a) => generateCode(a));
+        const filled = block.args
+            .filter(Boolean)
+            .map((a, i) => infixOperandCode(block.name, a, i > 0));
         return filled.join(` ${block.name} `);
     }
 
     // Infix operators: Left OP Right
     if (meta?.isInfix) {
-        const left = generateCode(block.args[0]);
-        const right = generateCode(block.args[1]);
+        const left = infixOperandCode(block.name, block.args[0], false);
+        const right = infixOperandCode(block.name, block.args[1], true);
         return `${left} ${block.name} ${right}`;
     }
 
@@ -552,6 +577,14 @@ interface ExpressionState {
      * Passing `target` also points subsequent saves at that rule/clause.
      */
     loadDqrClause: (clause: string, target?: RuleTarget) => void;
+    /**
+     * Load a clause read from the platform into both roots and point
+     * subsequent saves at it. Switches scenario to match the clause kind.
+     */
+    loadRuleClause: (
+        rule: DataQualityRule,
+        clause: DataQualityRuleClause,
+    ) => void;
     setRuleAttributeName: (name: string | null) => void;
     setRuleDisplayText: (text: string) => void;
     setRuleIsEnabled: (value: boolean) => void;
@@ -773,6 +806,48 @@ export const useExpressionStore = create<ExpressionState>((set, get) => ({
                     ruleSavedAt: null,
                 });
             }
+        } catch (e) {
+            set({ dqRulesError: (e as Error).message });
+        }
+    },
+
+    loadRuleClause: (rule, clause) => {
+        try {
+            const mainBlock = parseExpressionToBlock(clause.whatExpression);
+            const whenBlock = clause.whenExpression
+                ? parseExpressionToBlock(clause.whenExpression)
+                : null;
+            // The first block's mode decides which clause list a save
+            // writes to, so it has to match the clause being edited
+            const mode = get().blockConfigs[0]?.expressionMode ?? "validation";
+            if (mode !== clause.kind) {
+                get().setScenario(
+                    clause.kind === "assignment" ? "changeTo" : "validIf",
+                );
+            }
+            get().setRoot(0, mainBlock);
+            get().setRoot(1, whenBlock);
+            get().setIsConstraint(clause.isConstraint);
+            // A display text that only repeats the clause is left blank,
+            // so it follows the expression if the user edits it
+            const displayText = clause.whatDisplayText ?? "";
+            const repeatsClause =
+                displayText === clause.whatExpression ||
+                displayText ===
+                    defaultRuleDisplayText(
+                        clause.whatExpression,
+                        clause.whenExpression,
+                    );
+            set({
+                dqRulesError: null,
+                ruleId: normalizeId(rule.id),
+                ruleClauseId: normalizeId(clause.id),
+                ruleAttributeName: rule.attributeName,
+                ruleDisplayText: repeatsClause ? "" : displayText,
+                ruleIsEnabled: rule.isEnabled,
+                ruleSaveError: null,
+                ruleSavedAt: null,
+            });
         } catch (e) {
             set({ dqRulesError: (e as Error).message });
         }

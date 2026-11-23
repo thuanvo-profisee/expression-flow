@@ -214,25 +214,48 @@ describe("documented normalisations", () => {
     });
 });
 
-describe("known gap: grouping is not re-emitted", () => {
-    // generateCode never parenthesises infix children (src/store.ts:158), so a
-    // lower-precedence subtree loses its grouping and the platform would read
-    // the result with different semantics. Recorded here as an expected
-    // failure; the fix is to wrap an infix child whose precedence is lower
-    // than its parent's.
-    it.fails("preserves parentheses around a lower-precedence child", () => {
-        const expr = "([A] = 1 OR [B] = 2) AND [C] = 3";
+describe("grouping is re-emitted where precedence needs it", () => {
+    // Dropping these parentheses changes how the platform reads the rule
+    it.each([
+        "([A] = 1 OR [B] = 2) AND [C] = 3",
+        "[A] = 1 AND ([B] = 2 OR [C] = 3)",
+        "([MSRP] + 10) * 2",
+        "[A] - ([B] - [C])",
+        "[A] / ([B] * [C])",
+        "[Name] & ([Code] + 1)",
+        'NOT(([A] = "x" OR [A] = "y") AND [B] <> NULL)',
+    ])("%s", (expr) => {
         expect(roundTrip(expr)).toBe(expr);
     });
 
-    it("currently drops them, changing how the platform reads the rule", () => {
-        expect(roundTrip("([A] = 1 OR [B] = 2) AND [C] = 3")).toBe(
-            "[A] = 1 OR [B] = 2 AND [C] = 3",
-        );
+    it.each([
+        // redundant parentheses are still unwrapped
+        ["([A] = 1 OR [B] = 2)", "[A] = 1 OR [B] = 2"],
+        ["([A] - [B]) - [C]", "[A] - [B] - [C]"],
+        ["[A] = 1 AND ([B] = 2 AND [C] = 3)", "[A] = 1 AND [B] = 2 AND [C] = 3"],
+        ["[A] = 1 OR ([B] = 2 AND [C] = 3)", "[A] = 1 OR [B] = 2 AND [C] = 3"],
+    ])("%s → %s", (input, expected) => {
+        expect(roundTrip(input)).toBe(expected);
     });
+});
 
-    it.fails("preserves parentheses around an arithmetic child", () => {
-        const expr = "([MSRP] + 10) * 2";
-        expect(roundTrip(expr)).toBe(expr);
+describe("prefix NOT without parentheses", () => {
+    it.each([
+        ['NOT CONTAINS([Name], "x")', 'NOT(CONTAINS([Name], "x"))'],
+        // binds tighter than AND / OR
+        [
+            'NOT CONTAINS([Name], "x") AND [Code] <> NULL',
+            'NOT(CONTAINS([Name], "x")) AND [Code] <> NULL',
+        ],
+        [
+            '[A] = 1 OR NOT STARTSWITH([Code], "SGA")',
+            '[A] = 1 OR NOT(STARTSWITH([Code], "SGA"))',
+        ],
+        // looser than comparisons
+        ["NOT [A] = 1", "NOT([A] = 1)"],
+        // NOT(...) as a call keeps its argument
+        ["NOT([A] = 1 AND [B] = 2)", "NOT([A] = 1 AND [B] = 2)"],
+    ])("%s → %s", (input, expected) => {
+        expect(roundTrip(input)).toBe(expected);
     });
 });

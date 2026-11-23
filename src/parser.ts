@@ -9,12 +9,13 @@
 //   • Functions:      IF(...), CONCAT(...), LENGTH(...)
 //   • 0-arg funcs:    NOW, TODAY, NEWGUID
 //   • Infix ops:      =, <>, >, <, >=, <=, +, -, *, /, IN, AND, OR
+//   • Prefix NOT:     NOT CONTAINS([Name], "x")  → NOT(...)
 //   • Grouping:       (a, b, c)  → GROUP block
 //   • Precedence:     *, / > +, - > comparisons > IN > AND > OR
 // ─────────────────────────────────────────────────────────────────
 
 import type { Block } from "./types";
-import { FUNCTION_REGISTRY } from "./types";
+import { FUNCTION_REGISTRY, infixPrecedence } from "./types";
 import { uid } from "./store";
 
 // ─── Token Types ─────────────────────────────────────────────────
@@ -185,33 +186,6 @@ function tokenize(input: string): Token[] {
 
 // ─── Parser (Recursive Descent with Precedence Climbing) ─────────
 
-function getOperatorPrecedence(op: string): number {
-    switch (op) {
-        case "OR":
-            return 1;
-        case "AND":
-            return 2;
-        case "IN":
-            return 3;
-        case "=":
-        case "<>":
-        case ">":
-        case "<":
-        case ">=":
-        case "<=":
-            return 4;
-        case "&":
-        case "+":
-        case "-":
-            return 5;
-        case "*":
-        case "/":
-            return 6;
-        default:
-            return -1;
-    }
-}
-
 /** Look up a function name in the registry (case-insensitive) */
 function resolveRegistryName(name: string): string {
     // Try exact match first
@@ -290,7 +264,7 @@ class ExpressionParser {
             const token = this.peek();
             if (!token || token.type !== "OP") break;
 
-            const prec = getOperatorPrecedence(token.value);
+            const prec = infixPrecedence(token.value);
             if (prec < 0 || prec < minPrec) break;
 
             this.consume(); // consume operator
@@ -409,6 +383,17 @@ class ExpressionParser {
                     type: "FUNCTION",
                     name: registryName,
                     args,
+                };
+            }
+
+            // Prefix NOT without parens: NOT CONTAINS([Name], "x").
+            // Binds looser than comparisons and IN, tighter than AND / OR.
+            if (registryName === "NOT") {
+                return {
+                    id: uid(),
+                    type: "FUNCTION",
+                    name: "NOT",
+                    args: [this.parseInfix(infixPrecedence("IN"))],
                 };
             }
 

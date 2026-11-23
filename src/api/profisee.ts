@@ -45,21 +45,44 @@ export interface EntityOption {
     name: string;
 }
 
-interface RawDataQualityRule {
+export interface RawRuleClause {
     id: string;
-    entityId: MemberIdentifier;
-    attributeId: MemberIdentifier | null;
-    isEnabled: boolean;
-    displayText: string | null;
-    clauses: { id: string; name: string }[];
-    triggeringAction: number;
+    whatExpression: string | null;
+    whatDisplayText: string | null;
+    whenExpression: string | null;
+    whenDisplayText: string | null;
+    /** Validation clauses only */
+    isConstraint?: boolean;
 }
 
-/** One clause of a rule: expression text plus its platform id */
+/** One GET /Rules record, requested with Attributes=[Configuration] */
+export interface RawRuleRecord {
+    id: string;
+    configuration: {
+        entityId: MemberIdentifier | null;
+        attributeId: MemberIdentifier | null;
+        isEnabled: boolean;
+        validationClauses: RawRuleClause[] | null;
+        assignmentClauses: RawRuleClause[] | null;
+    } | null;
+}
+
+interface RawPagedResponse<T> {
+    data: T[] | null;
+    totalPages?: number;
+}
+
+/** One clause of a rule, as the platform stores it */
 export interface DataQualityRuleClause {
     id: string;
-    /** Expression code, e.g. [Color].[Code]="Hello" WHEN [Name]="Name" */
-    text: string;
+    kind: "validation" | "assignment";
+    /** Expression code, e.g. [Color].[Code] = "Hello" */
+    whatExpression: string;
+    /** WHEN guard expression, or null when the clause always applies */
+    whenExpression: string | null;
+    /** Label shown in the platform, e.g. "Code must be Hello" */
+    whatDisplayText: string | null;
+    isConstraint: boolean;
 }
 
 export interface DataQualityRule {
@@ -67,7 +90,6 @@ export interface DataQualityRule {
     entityName: string;
     attributeName: string | null;
     isEnabled: boolean;
-    displayText: string | null;
     clauses: DataQualityRuleClause[];
 }
 
@@ -89,12 +111,13 @@ function resolveRequest(cfg?: ProfiseeConfig | null): {
     return { base: PROXY_BASE, headers: {} };
 }
 
-async function apiRequest<T>(
+/** Send a request and return the parsed JSON body as-is */
+async function apiRequestRaw(
     method: "GET" | "PUT" | "POST",
     path: string,
     body?: unknown,
     cfg?: ProfiseeConfig | null,
-): Promise<T> {
+): Promise<unknown> {
     const { base, headers } = resolveRequest(cfg);
     let res: Response;
     try {
@@ -131,8 +154,18 @@ async function apiRequest<T>(
     }
     // 204 / empty bodies are valid responses for writes
     const text = await res.text();
-    if (!text) return undefined as T;
-    const json = JSON.parse(text);
+    return text ? JSON.parse(text) : undefined;
+}
+
+async function apiRequest<T>(
+    method: "GET" | "PUT" | "POST",
+    path: string,
+    body?: unknown,
+    cfg?: ProfiseeConfig | null,
+): Promise<T> {
+    const json = (await apiRequestRaw(method, path, body, cfg)) as
+        | { data?: unknown }
+        | undefined;
     // Some endpoints wrap the payload in { data: ... }
     return (json?.data ?? json) as T;
 }
@@ -157,23 +190,64 @@ export async function testConnection(cfg: ProfiseeConfig): Promise<number> {
     return mapEntities(raw).length;
 }
 
-/** Fetch the Data Quality Rules defined for an entity */
+/** GET /Rules page size; pages are followed until totalPages */
+const RULES_PAGE_SIZE = 500;
+
+/**
+ * Fetch the Data Quality Rules defined for an entity.
+ *
+ * Reads GET /Rules rather than GET /DataQualityRules: the latter returns
+ * at most 50 rules, labels each clause with its display text instead of
+ * its expression, and answers 404 when the entity has no rules.
+ */
 export async function fetchDataQualityRules(
     entityUid: string,
 ): Promise<DataQualityRule[]> {
-    const raw = await apiGet<RawDataQualityRule[]>(
-        `/DataQualityRules?entityUid=${encodeURIComponent(entityUid)}`,
-    );
-    return raw.map((r) => ({
+    const filter = encodeURIComponent(`[EntityUid] eq '${entityUid}'`);
+    const attributes = encodeURIComponent("[Configuration]");
+    const records: RawRuleRecord[] = [];
+    for (let page = 1, totalPages = 1; page <= totalPages; page++) {
+        // Raw request: the paging fields sit next to `data`
+        const res = (await apiRequestRaw(
+            "GET",
+            `/Rules?Filter=${filter}&Attributes=${attributes}` +
+                `&PageSize=${RULES_PAGE_SIZE}&PageNumber=${page}`,
+        )) as RawPagedResponse<RawRuleRecord> | undefined;
+        const data = res?.data ?? [];
+        records.push(...data);
+        if (data.length === 0) break;
+        totalPages = res?.totalPages ?? 1;
+    }
+    return records.map(mapRuleRecord);
+}
+
+/** Map a GET /Rules record onto a DataQualityRule (exported for tests) */
+export function mapRuleRecord(r: RawRuleRecord): DataQualityRule {
+    const cfg = r.configuration;
+    const clauses = (
+        kind: DataQualityRuleClause["kind"],
+        raw: RawRuleClause[] | null | undefined,
+    ): DataQualityRuleClause[] =>
+        (raw ?? [])
+            .filter((c) => c.whatExpression?.trim())
+            .map((c) => ({
+                id: c.id,
+                kind,
+                whatExpression: c.whatExpression!.trim(),
+                whenExpression: c.whenExpression?.trim() || null,
+                whatDisplayText: c.whatDisplayText?.trim() || null,
+                isConstraint: kind === "validation" && !!c.isConstraint,
+            }));
+    return {
         id: r.id,
-        entityName: r.entityId.name ?? "",
-        attributeName: r.attributeId?.name ?? null,
-        isEnabled: r.isEnabled,
-        displayText: r.displayText,
-        clauses: r.clauses
-            .map((c) => ({ id: c.id, text: c.name.trim() }))
-            .filter((c) => c.text),
-    }));
+        entityName: cfg?.entityId?.name ?? "",
+        attributeName: cfg?.attributeId?.name ?? null,
+        isEnabled: cfg?.isEnabled ?? true,
+        clauses: [
+            ...clauses("validation", cfg?.validationClauses),
+            ...clauses("assignment", cfg?.assignmentClauses),
+        ],
+    };
 }
 
 // ─── Saving rules (PUT /Rules) ───────────────────────────────────

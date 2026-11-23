@@ -22,8 +22,7 @@ import {
     MousePointerClick,
     Ban,
 } from "lucide-react";
-import type { DragItem, AttributeNode, Block, BlockConfig } from "../types";
-import { splitDqrClause } from "../parser";
+import type { DragItem, AttributeNode, Block } from "../types";
 import {
     ATTRIBUTE_CATALOGS,
     ATTRIBUTE_CATALOG_KEYS,
@@ -34,6 +33,7 @@ import {
     generateCode,
     panToBlock,
     DEMO_PREFIX,
+    SCENARIOS,
 } from "../store";
 
 // ─── Helpers ────────────────────────────────────────────────────
@@ -975,18 +975,12 @@ function GeneratedPanel({
 
 // ─── Data Quality Rules ──────────────────────────────────────────
 
-function DataQualityRulesSection({
-    blockConfigs,
-}: {
-    blockConfigs: BlockConfig[];
-}) {
+function DataQualityRulesSection() {
     const rules = useExpressionStore((s) => s.dataQualityRules);
     const loading = useExpressionStore((s) => s.dqRulesLoading);
     const error = useExpressionStore((s) => s.dqRulesError);
     const reload = useExpressionStore((s) => s.loadDataQualityRules);
-    const loadDqrClause = useExpressionStore((s) => s.loadDqrClause);
-    const mainLabel = blockConfigs[0]?.name ?? "Main";
-    const whenLabel = blockConfigs[1]?.name ?? "When";
+    const loadRuleClause = useExpressionStore((s) => s.loadRuleClause);
 
     return (
         <CollapsibleSection
@@ -1040,49 +1034,56 @@ function DataQualityRulesSection({
                                     />
                                 )}
                                 <span className="text-[10px] font-semibold text-slate-600 truncate">
-                                    {rule.displayText ??
-                                        rule.attributeName ??
-                                        "Rule"}
+                                    {rule.attributeName ?? "Rule"}
                                 </span>
                             </div>
                             {rule.clauses.map((clause) => {
-                                const parsed = splitDqrClause(clause.text);
+                                const [mainConfig, whenConfig] =
+                                    SCENARIOS[
+                                        clause.kind === "assignment"
+                                            ? "changeTo"
+                                            : "validIf"
+                                    ].configs;
+                                const caption =
+                                    clause.whatDisplayText &&
+                                    clause.whatDisplayText !==
+                                        clause.whatExpression
+                                        ? clause.whatDisplayText
+                                        : null;
                                 return (
                                     <button
                                         key={clause.id}
                                         onClick={() =>
-                                            loadDqrClause(clause.text, {
-                                                ruleId: rule.id,
-                                                clauseId: clause.id,
-                                                attributeName:
-                                                    rule.attributeName,
-                                                displayText: rule.displayText,
-                                                isEnabled: rule.isEnabled,
-                                            })
+                                            loadRuleClause(rule, clause)
                                         }
                                         title="Click to load into canvas"
                                         className="w-full text-left mb-1 last:mb-0 rounded border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 transition-colors px-1.5 py-1 group"
                                     >
+                                        {caption && (
+                                            <div className="text-[9px] text-slate-600 mb-0.5 break-words">
+                                                {caption}
+                                            </div>
+                                        )}
                                         <div className="flex items-start gap-1">
                                             <span className="text-[8px] font-semibold text-slate-400 shrink-0 w-[52px] truncate">
-                                                {mainLabel}
+                                                {mainConfig.name}
                                             </span>
                                             <pre className="flex-1 min-w-0 text-[9px] text-slate-500 whitespace-pre-wrap font-mono leading-relaxed">
-                                                {parsed.main}
+                                                {clause.whatExpression}
                                             </pre>
                                         </div>
-                                        {parsed.when && (
+                                        {clause.whenExpression && (
                                             <div className="flex items-start gap-1 mt-0.5">
                                                 <span className="text-[8px] font-semibold text-slate-400 shrink-0 w-[52px] truncate">
-                                                    {whenLabel}
+                                                    {whenConfig.name}
                                                 </span>
                                                 <pre className="flex-1 min-w-0 text-[9px] text-slate-500 whitespace-pre-wrap font-mono leading-relaxed">
-                                                    {parsed.when}
+                                                    {clause.whenExpression}
                                                 </pre>
                                             </div>
                                         )}
                                         <div className="flex items-center gap-1.5 mt-1">
-                                            {parsed.isConstraint && (
+                                            {clause.isConstraint && (
                                                 <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-amber-100 text-amber-600">
                                                     Constraint
                                                 </span>
@@ -1286,7 +1287,7 @@ export function AttributesPanel() {
                     </CollapsibleSection>
 
                     {/* Data Quality Rules — collapsible */}
-                    <DataQualityRulesSection blockConfigs={blockConfigs} />
+                    <DataQualityRulesSection />
 
                     {/* Break line */}
                     <div className="h-px bg-slate-200 w-full" />

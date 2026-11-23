@@ -581,6 +581,38 @@ export const FUNCTION_REGISTRY: Record<string, FunctionMeta> = {
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
+/**
+ * Binding strength of an infix operator (higher binds tighter), or -1 when
+ * `op` is not infix. Shared by the parser and the code generator so that
+ * generated code re-parses into the same tree.
+ */
+export function infixPrecedence(op: string): number {
+    switch (op) {
+        case "OR":
+            return 1;
+        case "AND":
+            return 2;
+        case "IN":
+            return 3;
+        case "=":
+        case "<>":
+        case ">":
+        case "<":
+        case ">=":
+        case "<=":
+            return 4;
+        case "&":
+        case "+":
+        case "-":
+            return 5;
+        case "*":
+        case "/":
+            return 6;
+        default:
+            return -1;
+    }
+}
+
 export function getFunctionsBySubcategory(
     sub: FunctionSubcategory,
 ): FunctionMeta[] {

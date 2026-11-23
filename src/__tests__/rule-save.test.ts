@@ -618,8 +618,7 @@ describe("store.saveRule", () => {
         await store().saveRule();
         const gets = fetchMock.mock.calls.filter(
             ([url, init]) =>
-                init?.method === "GET" &&
-                String(url).includes("/DataQualityRules"),
+                init?.method === "GET" && String(url).includes("/Rules?"),
         );
         expect(gets).toHaveLength(1);
     });
