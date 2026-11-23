@@ -146,11 +146,11 @@ function AttributeTreeNode({
                                 className="text-blue-400 animate-spin"
                             />
                         ) : showExpanded ? (
-                            <ChevronDown size={12} className="text-slate-400" />
+                            <ChevronDown size={12} className="text-slate-500" />
                         ) : (
                             <ChevronRight
                                 size={12}
-                                className="text-slate-400"
+                                className="text-slate-500"
                             />
                         )}
                     </button>
@@ -163,7 +163,7 @@ function AttributeTreeNode({
                     <div
                         className={`
             flex items-center gap-1 px-2 py-1 rounded-full
-            border text-xs font-medium
+            border text-[13px] font-medium
             hover:shadow-sm transition-all duration-150
             ${
                 labelMatches && isSearching
@@ -179,7 +179,7 @@ function AttributeTreeNode({
                         <Hash size={9} className="text-blue-400 shrink-0" />
                         <span className="truncate">{node.label}</span>
                         {hasChildren && (
-                            <span className="text-[8px] text-blue-300 ml-0.5 shrink-0">
+                            <span className="text-[10px] text-blue-500 ml-0.5 shrink-0">
                                 {loadedChildren
                                     ? `+${node.children!.length}`
                                     : "…"}
@@ -191,7 +191,7 @@ function AttributeTreeNode({
                 {/* Full path tooltip on hover (only for nested) */}
                 {depth > 0 && (
                     <span
-                        className="text-[8px] text-slate-300 ml-1 opacity-0 group-hover:opacity-100 truncate max-w-[80px] transition-opacity"
+                        className="text-[10px] text-slate-500 ml-1 opacity-0 group-hover:opacity-100 truncate max-w-[80px] transition-opacity"
                         title={node.value}
                     >
                         {node.value}
@@ -205,7 +205,7 @@ function AttributeTreeNode({
                     {childError && (
                         <button
                             onClick={() => void fetchChildren()}
-                            className="flex items-center gap-1 text-[9px] text-rose-500 hover:text-rose-700 transition-colors"
+                            className="flex items-center gap-1 text-[11px] text-rose-500 hover:text-rose-700 transition-colors"
                             style={{ paddingLeft: `${(depth + 1) * 16}px` }}
                         >
                             <AlertTriangle size={9} />
@@ -287,8 +287,8 @@ function CustomValueInput() {
                 className="
           w-full px-2.5 py-1.5 rounded-md
           border border-slate-200 bg-white
-          text-xs font-mono text-slate-700
-          placeholder:text-slate-300
+          text-[13px] font-mono text-slate-700
+          placeholder:text-slate-400
           focus:outline-none focus:ring-1 focus:ring-green-400 focus:border-green-400
         "
             />
@@ -300,7 +300,7 @@ function CustomValueInput() {
                         className={`
               inline-flex items-center gap-1.5
               px-2.5 py-1.5 rounded-md
-              text-xs font-mono
+              text-[13px] font-mono
               cursor-grab active:cursor-grabbing
               hover:shadow-sm transition-all duration-150
               ${
@@ -317,7 +317,7 @@ function CustomValueInput() {
                         )}
                         <span>{resolvedValue}</span>
                         <span
-                            className={`text-[9px] ml-1 ${
+                            className={`text-[11px] ml-1 ${
                                 valueType === "number"
                                     ? "text-amber-400"
                                     : "text-green-400"
@@ -328,7 +328,7 @@ function CustomValueInput() {
                     </div>
                     <span
                         className={`
-            text-[9px] font-semibold px-1.5 py-0.5 rounded
+            text-[11px] font-semibold px-1.5 py-0.5 rounded
             ${
                 valueType === "number"
                     ? "bg-amber-100 text-amber-600"
@@ -368,7 +368,7 @@ function CustomValueInput() {
                         <DraggableItem key={value} item={item}>
                             <div
                                 className="
-                px-1.5 py-0.5 rounded text-[10px] font-mono
+                px-1.5 py-0.5 rounded text-[12px] font-mono
                 bg-slate-100 border border-slate-200 text-slate-500
                 hover:border-green-300 hover:text-green-600 hover:bg-green-50
                 transition-all duration-150
@@ -480,7 +480,7 @@ function EntityDropdown({
                 disabled={loading && options.length === 0}
                 className={`
           w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-md
-          border bg-white text-xs font-medium text-slate-700
+          border bg-white text-[13px] font-medium text-slate-700
           transition-all duration-150
           hover:border-blue-300 hover:shadow-sm
           disabled:opacity-60 disabled:cursor-wait
@@ -489,7 +489,7 @@ function EntityDropdown({
             >
                 <Database size={12} className="text-blue-400 shrink-0" />
                 <span
-                    className={`truncate ${selectedLabel ? "" : "text-slate-300"}`}
+                    className={`truncate ${selectedLabel ? "" : "text-slate-500"}`}
                 >
                     {selectedLabel ??
                         (loading ? "Loading entities…" : "Select an entity…")}
@@ -502,7 +502,7 @@ function EntityDropdown({
                 ) : (
                     <ChevronDown
                         size={12}
-                        className={`text-slate-400 ml-auto shrink-0 transition-transform duration-150 ${
+                        className={`text-slate-500 ml-auto shrink-0 transition-transform duration-150 ${
                             isOpen ? "rotate-180" : ""
                         }`}
                     />
@@ -521,7 +521,7 @@ function EntityDropdown({
                 >
                     {/* Search input */}
                     <div className="flex items-center gap-1.5 px-2.5 py-2 border-b border-slate-100">
-                        <Search size={12} className="text-slate-400 shrink-0" />
+                        <Search size={12} className="text-slate-500 shrink-0" />
                         <input
                             ref={searchInputRef}
                             type="text"
@@ -533,19 +533,19 @@ function EntityDropdown({
                             onKeyDown={handleKeyDown}
                             placeholder="Search entities..."
                             className="
-                flex-1 text-xs text-slate-700 bg-transparent
-                placeholder:text-slate-300
+                flex-1 text-[13px] text-slate-700 bg-transparent
+                placeholder:text-slate-400
                 outline-none
               "
                         />
-                        <span className="text-[9px] text-slate-300">
+                        <span className="text-[11px] text-slate-500">
                             {filtered.length}
                         </span>
                     </div>
                     {/* Results */}
                     <div className="flex-1 overflow-y-auto">
                         {filtered.length === 0 ? (
-                            <div className="px-3 py-4 text-xs text-slate-400 text-center">
+                            <div className="px-3 py-4 text-[13px] text-slate-500 text-center">
                                 No entities found
                             </div>
                         ) : (
@@ -555,7 +555,7 @@ function EntityDropdown({
                                     {(idx === 0 ||
                                         filtered[idx - 1].group !==
                                             opt.group) && (
-                                        <div className="px-2.5 pt-2 pb-1 text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+                                        <div className="px-2.5 pt-2 pb-1 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                                             {GROUP_LABELS[opt.group]}
                                         </div>
                                     )}
@@ -566,7 +566,7 @@ function EntityDropdown({
                                         }
                                         className={`
                       w-full flex items-center gap-2 px-2.5 py-1.5 text-left
-                      text-xs transition-colors
+                      text-[13px] transition-colors
                       ${idx === highlightIdx ? "bg-blue-50" : "hover:bg-slate-50"}
                       ${opt.value === selected ? "font-semibold" : ""}
                     `}
@@ -576,7 +576,7 @@ function EntityDropdown({
                                             size={10}
                                             className={`shrink-0 ${
                                                 opt.group === "demo"
-                                                    ? "text-slate-300"
+                                                    ? "text-slate-500"
                                                     : "text-blue-400"
                                             }`}
                                         />
@@ -620,7 +620,7 @@ function CollapsibleSection({
             <div className="flex items-center gap-1.5 w-full mb-1">
                 <button
                     onClick={() => setOpen(!open)}
-                    className="flex items-center gap-1.5 flex-1 min-w-0 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-700 transition-colors"
+                    className="flex items-center gap-1.5 flex-1 min-w-0 text-left text-[12px] font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-700 transition-colors"
                 >
                     {open ? (
                         <ChevronDown size={10} />
@@ -630,7 +630,7 @@ function CollapsibleSection({
                     {icon}
                     <span className="truncate">{label}</span>
                     {count != null && (
-                        <span className="text-slate-300 font-normal normal-case shrink-0">
+                        <span className="text-slate-500 font-normal normal-case shrink-0">
                             {count}
                         </span>
                     )}
@@ -643,7 +643,7 @@ function CollapsibleSection({
                         }}
                         disabled={reloading}
                         title="Reload"
-                        className="p-0.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 disabled:opacity-50 transition-colors shrink-0"
+                        className="p-0.5 rounded text-slate-500 hover:text-slate-600 hover:bg-slate-200/60 disabled:opacity-50 transition-colors shrink-0"
                     >
                         <RefreshCw
                             size={10}
@@ -735,11 +735,11 @@ function ExpressionTreeNode({
                         className="p-0.5 rounded hover:bg-slate-200/60 transition-colors shrink-0"
                     >
                         {expanded ? (
-                            <ChevronDown size={10} className="text-slate-400" />
+                            <ChevronDown size={10} className="text-slate-500" />
                         ) : (
                             <ChevronRight
                                 size={10}
-                                className="text-slate-400"
+                                className="text-slate-500"
                             />
                         )}
                     </button>
@@ -749,7 +749,7 @@ function ExpressionTreeNode({
 
                 {/* Arg label (e.g. "Condition", "Left") */}
                 {argLabel && (
-                    <span className="text-[8px] text-slate-400 shrink-0 w-[52px] truncate text-right mr-0.5">
+                    <span className="text-[10px] text-slate-500 shrink-0 w-[64px] truncate text-right mr-0.5">
                         {argLabel}
                     </span>
                 )}
@@ -759,7 +759,7 @@ function ExpressionTreeNode({
                     onClick={handleClick}
                     className={`
                         inline-flex items-center gap-1 px-1.5 py-0.5
-                        rounded border text-[10px] font-medium leading-tight
+                        rounded border text-[12px] font-medium leading-tight
                         max-w-[180px] truncate
                         cursor-pointer transition-all duration-150
                         ${getNodeStyle(block)}
@@ -777,7 +777,7 @@ function ExpressionTreeNode({
 
                 {/* Children count badge */}
                 {hasChildren && !expanded && (
-                    <span className="text-[8px] text-slate-400 ml-0.5">
+                    <span className="text-[10px] text-slate-500 ml-0.5">
                         ({filledArgs.length})
                     </span>
                 )}
@@ -820,7 +820,7 @@ function ExpressionTreeView({
 }) {
     if (!root) {
         return (
-            <div className="text-[10px] text-slate-300 italic px-1 py-2">
+            <div className="text-[12px] text-slate-500 italic px-1 py-2">
                 Empty expression
             </div>
         );
@@ -862,7 +862,7 @@ function GeneratedPanel({
             {/* Header with toggle */}
             <div className="flex items-center gap-1.5 px-3 py-2">
                 <Code2 size={12} className="text-slate-500" />
-                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                <span className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">
                     Generated
                 </span>
                 {/* Expand / collapse button */}
@@ -876,12 +876,12 @@ function GeneratedPanel({
                     {isExpanded ? (
                         <Minimize2
                             size={12}
-                            className="text-slate-400 group-hover/exp:text-slate-600"
+                            className="text-slate-500 group-hover/exp:text-slate-600"
                         />
                     ) : (
                         <Maximize2
                             size={12}
-                            className="text-slate-400 group-hover/exp:text-slate-600"
+                            className="text-slate-500 group-hover/exp:text-slate-600"
                         />
                     )}
                 </button>
@@ -891,11 +891,11 @@ function GeneratedPanel({
                         onClick={() => setViewMode("code")}
                         className={`
                             flex items-center gap-1 px-1.5 py-0.5 rounded
-                            text-[9px] font-semibold transition-all duration-150
+                            text-[11px] font-semibold transition-all duration-150
                             ${
                                 viewMode === "code"
                                     ? "bg-white text-slate-700 shadow-sm"
-                                    : "text-slate-400 hover:text-slate-600"
+                                    : "text-slate-500 hover:text-slate-600"
                             }
                         `}
                         title="Code view"
@@ -907,11 +907,11 @@ function GeneratedPanel({
                         onClick={() => setViewMode("tree")}
                         className={`
                             flex items-center gap-1 px-1.5 py-0.5 rounded
-                            text-[9px] font-semibold transition-all duration-150
+                            text-[11px] font-semibold transition-all duration-150
                             ${
                                 viewMode === "tree"
                                     ? "bg-white text-slate-700 shadow-sm"
-                                    : "text-slate-400 hover:text-slate-600"
+                                    : "text-slate-500 hover:text-slate-600"
                             }
                         `}
                         title="Tree view"
@@ -934,12 +934,12 @@ function GeneratedPanel({
                     return (
                         <div key={idx}>
                             <div className="flex items-center gap-1.5 mb-0.5">
-                                <span className="text-[9px] font-semibold text-slate-400 truncate">
+                                <span className="text-[11px] font-semibold text-slate-500 truncate">
                                     {cfg?.name ?? `Expression ${idx + 1}`}
                                 </span>
                                 <span
                                     className={`
-                                        text-[8px] font-semibold px-1 py-0.5 rounded shrink-0
+                                        text-[10px] font-semibold px-1 py-0.5 rounded shrink-0
                                         ${
                                             isValidation
                                                 ? "bg-amber-100 text-amber-600"
@@ -953,7 +953,7 @@ function GeneratedPanel({
 
                             {viewMode === "code" ? (
                                 <pre
-                                    className={`text-[10px] text-slate-600 bg-white border border-slate-200 rounded-lg p-2 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto ${
+                                    className={`text-[12px] text-slate-600 bg-white border border-slate-200 rounded-lg p-2 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto ${
                                         isExpanded ? "" : "max-h-24"
                                     }`}
                                 >
@@ -991,7 +991,7 @@ function DataQualityRulesSection() {
             reloading={loading}
         >
             {loading ? (
-                <div className="flex items-center gap-1.5 px-1 py-2 text-[10px] text-slate-400">
+                <div className="flex items-center gap-1.5 px-1 py-2 text-[12px] text-slate-500">
                     <Loader2 size={12} className="text-blue-400 animate-spin" />
                     Loading rules…
                 </div>
@@ -1002,12 +1002,12 @@ function DataQualityRulesSection() {
                         className="text-rose-400 shrink-0 mt-0.5"
                     />
                     <div className="min-w-0">
-                        <div className="text-[9px] text-rose-600 break-words">
+                        <div className="text-[11px] text-rose-600 break-words">
                             {error}
                         </div>
                         <button
                             onClick={() => void reload()}
-                            className="flex items-center gap-1 mt-0.5 text-[9px] font-semibold text-rose-500 hover:text-rose-700 transition-colors"
+                            className="flex items-center gap-1 mt-0.5 text-[11px] font-semibold text-rose-500 hover:text-rose-700 transition-colors"
                         >
                             <RefreshCw size={9} />
                             Retry
@@ -1015,7 +1015,7 @@ function DataQualityRulesSection() {
                     </div>
                 </div>
             ) : rules.length === 0 ? (
-                <div className="text-[10px] text-slate-300 italic px-1 py-2">
+                <div className="text-[12px] text-slate-500 italic px-1 py-2">
                     No data quality rules
                 </div>
             ) : (
@@ -1029,11 +1029,11 @@ function DataQualityRulesSection() {
                                 {!rule.isEnabled && (
                                     <Ban
                                         size={9}
-                                        className="text-slate-300 shrink-0"
+                                        className="text-slate-400 shrink-0"
                                         aria-label="Disabled"
                                     />
                                 )}
-                                <span className="text-[10px] font-semibold text-slate-600 truncate">
+                                <span className="text-[12px] font-semibold text-slate-600 truncate">
                                     {rule.attributeName ?? "Rule"}
                                 </span>
                             </div>
@@ -1060,35 +1060,35 @@ function DataQualityRulesSection() {
                                         className="w-full text-left mb-1 last:mb-0 rounded border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 transition-colors px-1.5 py-1 group"
                                     >
                                         {caption && (
-                                            <div className="text-[9px] text-slate-600 mb-0.5 break-words">
+                                            <div className="text-[11px] text-slate-600 mb-0.5 break-words">
                                                 {caption}
                                             </div>
                                         )}
                                         <div className="flex items-start gap-1">
-                                            <span className="text-[8px] font-semibold text-slate-400 shrink-0 w-[52px] truncate">
+                                            <span className="text-[10px] font-semibold text-slate-500 shrink-0 w-[64px] truncate">
                                                 {mainConfig.name}
                                             </span>
-                                            <pre className="flex-1 min-w-0 text-[9px] text-slate-500 whitespace-pre-wrap font-mono leading-relaxed">
+                                            <pre className="flex-1 min-w-0 text-[11px] text-slate-500 whitespace-pre-wrap font-mono leading-relaxed">
                                                 {clause.whatExpression}
                                             </pre>
                                         </div>
                                         {clause.whenExpression && (
                                             <div className="flex items-start gap-1 mt-0.5">
-                                                <span className="text-[8px] font-semibold text-slate-400 shrink-0 w-[52px] truncate">
+                                                <span className="text-[10px] font-semibold text-slate-500 shrink-0 w-[64px] truncate">
                                                     {whenConfig.name}
                                                 </span>
-                                                <pre className="flex-1 min-w-0 text-[9px] text-slate-500 whitespace-pre-wrap font-mono leading-relaxed">
+                                                <pre className="flex-1 min-w-0 text-[11px] text-slate-500 whitespace-pre-wrap font-mono leading-relaxed">
                                                     {clause.whenExpression}
                                                 </pre>
                                             </div>
                                         )}
                                         <div className="flex items-center gap-1.5 mt-1">
                                             {clause.isConstraint && (
-                                                <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-amber-100 text-amber-600">
+                                                <span className="text-[10px] font-semibold px-1 py-0.5 rounded bg-amber-100 text-amber-600">
                                                     Constraint
                                                 </span>
                                             )}
-                                            <span className="flex items-center gap-0.5 text-[8px] font-semibold text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
+                                            <span className="flex items-center gap-0.5 text-[10px] font-semibold text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
                                                 <MousePointerClick size={8} />
                                                 Load
                                             </span>
@@ -1219,14 +1219,14 @@ export function AttributesPanel() {
             {!generatedExpanded && (
                 <div className="px-3 py-2 border-b border-slate-200 bg-slate-50/80">
                     <div className="flex items-center gap-1.5 mb-1">
-                        <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                             Entity
                         </span>
                         <button
                             onClick={() => void loadEntities()}
                             disabled={entitiesLoading}
                             title="Reload entities"
-                            className="ml-auto p-0.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 disabled:opacity-50 transition-colors"
+                            className="ml-auto p-0.5 rounded text-slate-500 hover:text-slate-600 hover:bg-slate-200/60 disabled:opacity-50 transition-colors"
                         >
                             <RefreshCw
                                 size={10}
@@ -1249,20 +1249,20 @@ export function AttributesPanel() {
                                 className="text-rose-400 shrink-0 mt-0.5"
                             />
                             <div className="min-w-0">
-                                <div className="text-[9px] text-rose-600 break-words">
+                                <div className="text-[11px] text-rose-600 break-words">
                                     {entitiesError}
                                 </div>
                                 <div className="flex items-center gap-3 mt-0.5">
                                     <button
                                         onClick={() => void loadEntities()}
-                                        className="flex items-center gap-1 text-[9px] font-semibold text-rose-500 hover:text-rose-700 transition-colors"
+                                        className="flex items-center gap-1 text-[11px] font-semibold text-rose-500 hover:text-rose-700 transition-colors"
                                     >
                                         <RefreshCw size={9} />
                                         Retry
                                     </button>
                                     <button
                                         onClick={openConfigDialog}
-                                        className="flex items-center gap-1 text-[9px] font-semibold text-rose-500 hover:text-rose-700 transition-colors"
+                                        className="flex items-center gap-1 text-[11px] font-semibold text-rose-500 hover:text-rose-700 transition-colors"
                                     >
                                         <Settings size={9} />
                                         Settings
@@ -1296,14 +1296,14 @@ export function AttributesPanel() {
                     <div className="relative">
                         <Search
                             size={12}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500"
                         />
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search attributes..."
-                            className="w-full pl-7 pr-2 py-1.5 text-xs rounded-md border border-slate-200 bg-slate-50 text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-300"
+                            className="w-full pl-7 pr-2 py-1.5 text-[13px] rounded-md border border-slate-200 bg-slate-50 text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-300"
                         />
                     </div>
 
@@ -1320,7 +1320,7 @@ export function AttributesPanel() {
                         reloading={attributesLoading}
                     >
                         {attributesLoading ? (
-                            <div className="flex items-center gap-1.5 px-1 py-2 text-[10px] text-slate-400">
+                            <div className="flex items-center gap-1.5 px-1 py-2 text-[12px] text-slate-500">
                                 <Loader2
                                     size={12}
                                     className="text-blue-400 animate-spin"
@@ -1334,7 +1334,7 @@ export function AttributesPanel() {
                                     className="text-rose-400 shrink-0 mt-0.5"
                                 />
                                 <div className="min-w-0">
-                                    <div className="text-[9px] text-rose-600 break-words">
+                                    <div className="text-[11px] text-rose-600 break-words">
                                         {attributesError}
                                     </div>
                                     {selectedEntityName && (
@@ -1344,7 +1344,7 @@ export function AttributesPanel() {
                                                     selectedEntityName,
                                                 )
                                             }
-                                            className="flex items-center gap-1 mt-0.5 text-[9px] font-semibold text-rose-500 hover:text-rose-700 transition-colors"
+                                            className="flex items-center gap-1 mt-0.5 text-[11px] font-semibold text-rose-500 hover:text-rose-700 transition-colors"
                                         >
                                             <RefreshCw size={9} />
                                             Retry
@@ -1353,7 +1353,7 @@ export function AttributesPanel() {
                                 </div>
                             </div>
                         ) : activeCatalog.length === 0 ? (
-                            <div className="text-[10px] text-slate-300 italic px-1 py-2">
+                            <div className="text-[12px] text-slate-500 italic px-1 py-2">
                                 No attributes
                             </div>
                         ) : (

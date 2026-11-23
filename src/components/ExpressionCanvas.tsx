@@ -110,7 +110,7 @@ export function ExpressionCanvas() {
                 onDragOver={onDragOver}
                 onInit={setReactFlowInstance}
                 fitView
-                fitViewOptions={{ padding: 0.3 }}
+                fitViewOptions={{ padding: 0.1 }}
                 minZoom={0.1}
                 maxZoom={1}
                 proOptions={{ hideAttribution: true }}
@@ -144,20 +144,20 @@ export function ExpressionCanvas() {
                 hover:bg-slate-50 transition-colors
               "
                         >
-                            <Settings2 size={14} className="text-slate-400" />
-                            <span className="text-xs font-semibold text-slate-600">
+                            <Settings2 size={14} className="text-slate-500" />
+                            <span className="text-[13px] font-semibold text-slate-600">
                                 Options
                             </span>
                             <div className="flex-1" />
                             {optionsExpanded ? (
                                 <ChevronDown
                                     size={14}
-                                    className="text-slate-400"
+                                    className="text-slate-500"
                                 />
                             ) : (
                                 <ChevronUp
                                     size={14}
-                                    className="text-slate-400"
+                                    className="text-slate-500"
                                 />
                             )}
                         </button>
@@ -177,7 +177,7 @@ export function ExpressionCanvas() {
                       focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer
                     "
                                     />
-                                    <span className="text-[11px] font-medium text-slate-600">
+                                    <span className="text-[13px] font-medium text-slate-600">
                                         Is Constraint
                                     </span>
                                 </label>

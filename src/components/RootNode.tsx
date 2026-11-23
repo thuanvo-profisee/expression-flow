@@ -104,7 +104,7 @@ function ImportExpressionArea({
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                     <FileText size={12} className="text-slate-500" />
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                    <span className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">
                         Import from expression
                     </span>
                 </div>
@@ -113,7 +113,7 @@ function ImportExpressionArea({
                     className="p-1 rounded hover:bg-slate-100 transition-colors"
                     title="Cancel"
                 >
-                    <X size={12} className="text-slate-400" />
+                    <X size={12} className="text-slate-500" />
                 </button>
             </div>
 
@@ -135,8 +135,8 @@ function ImportExpressionArea({
                 className="
           w-full px-3 py-2 rounded-lg
           border border-slate-200 bg-white
-          text-xs font-mono text-slate-700 leading-relaxed
-          placeholder:text-slate-300
+          text-[13px] font-mono text-slate-700 leading-relaxed
+          placeholder:text-slate-400
           focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300
           resize-y min-h-[60px] max-h-[200px]
         "
@@ -148,7 +148,7 @@ function ImportExpressionArea({
                         size={12}
                         className="text-red-400 shrink-0 mt-0.5"
                     />
-                    <span className="text-[11px] text-red-600 leading-snug">
+                    <span className="text-[13px] text-red-600 leading-snug">
                         {error}
                     </span>
                 </div>
@@ -160,7 +160,7 @@ function ImportExpressionArea({
                     className={`
             flex items-center gap-1.5
             px-3 py-1.5 rounded-lg
-            text-xs font-semibold text-white
+            text-[13px] font-semibold text-white
             transition-all duration-150
             ${
                 isValidation
@@ -176,14 +176,14 @@ function ImportExpressionArea({
                     onClick={onClose}
                     className="
             px-3 py-1.5 rounded-lg
-            text-xs font-medium text-slate-500
+            text-[13px] font-medium text-slate-500
             hover:bg-slate-100 hover:text-slate-700
             transition-all duration-150
           "
                 >
                     Cancel
                 </button>
-                <span className="text-[9px] text-slate-300 ml-auto">
+                <span className="text-[11px] text-slate-500 ml-auto">
                     Ctrl+Enter to import
                 </span>
             </div>
@@ -263,7 +263,7 @@ function RootDropZone({
                 <Plus
                     size={20}
                     className={
-                        isDragOver ? "text-indigo-500" : "text-slate-400"
+                        isDragOver ? "text-indigo-500" : "text-slate-500"
                     }
                 />
             </div>
@@ -271,13 +271,13 @@ function RootDropZone({
                 <div className="text-sm font-medium text-slate-500">
                     Drop an expression here
                 </div>
-                <div className="text-xs text-slate-400 mt-0.5 px-10">
+                <div className="text-[13px] text-slate-500 mt-0.5 px-10">
                     {config.expressionMode === "validation"
                         ? "Start with a comparison operator (=, >, <, ...) or a logical function (AND, OR, ...)"
                         : "Start with a function (IF, CONCAT, ...) or a data attribute"}
                 </div>
             </div>
-            <div className="text-[10px] text-slate-300 mt-1">
+            <div className="text-[12px] text-slate-500 mt-1">
                 e.g. {modeMeta.example}
             </div>
 
@@ -294,7 +294,7 @@ function RootDropZone({
               px-3 py-1.5 rounded-full
               bg-blue-100 border border-blue-300 text-blue-600
               hover:bg-blue-200 hover:text-blue-700
-              text-xs font-medium
+              text-[13px] font-medium
               transition-all duration-150
             "
                         title="Paste from clipboard"
@@ -313,7 +313,7 @@ function RootDropZone({
             px-3 py-1.5 rounded-full
             bg-violet-100 border border-violet-300 text-violet-600
             hover:bg-violet-200 hover:text-violet-700
-            text-xs font-medium
+            text-[13px] font-medium
             transition-all duration-150
           "
                     title="Import from expression text"
@@ -391,7 +391,7 @@ function RootNodeInner({ data }: NodeProps) {
                     >
                         {blockConfig.name}
                     </div>
-                    <div className="text-[10px] text-slate-400">
+                    <div className="text-[12px] text-slate-500">
                         Returns: {modeMeta.returnType}
                     </div>
                 </div>
@@ -414,7 +414,7 @@ function RootNodeInner({ data }: NodeProps) {
                                     ? isValidation
                                         ? "text-amber-600"
                                         : "text-indigo-600"
-                                    : "text-slate-400 group-hover/import:text-slate-600"
+                                    : "text-slate-500 group-hover/import:text-slate-600"
                             }`}
                         />
                     </button>
@@ -425,7 +425,7 @@ function RootNodeInner({ data }: NodeProps) {
                     >
                         <BookOpen
                             size={14}
-                            className="text-slate-400 group-hover/demo:text-slate-600"
+                            className="text-slate-500 group-hover/demo:text-slate-600"
                         />
                     </button>
                     {root && (
@@ -436,7 +436,7 @@ function RootNodeInner({ data }: NodeProps) {
                         >
                             <Trash2
                                 size={14}
-                                className="text-slate-400 group-hover/clear:text-red-500"
+                                className="text-slate-500 group-hover/clear:text-red-500"
                             />
                         </button>
                     )}

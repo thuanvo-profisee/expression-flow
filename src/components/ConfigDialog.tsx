@@ -108,14 +108,14 @@ function ConfigDialogForm() {
 
                 {/* Body */}
                 <div className="p-4 space-y-3">
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                    <p className="text-[13px] text-slate-500 leading-relaxed">
                         Enter your Profisee instance to load entities and
                         attributes. Settings are stored in this browser only.
                     </p>
 
                     {/* Instance URL */}
                     <div>
-                        <label className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                        <label className="flex items-center gap-1 text-[12px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
                             <Server size={10} />
                             Instance URL
                         </label>
@@ -128,8 +128,8 @@ function ConfigDialogForm() {
                             className="
                 w-full px-2.5 py-1.5 rounded-md
                 border border-slate-200 bg-white
-                text-xs font-mono text-slate-700
-                placeholder:text-slate-300
+                text-[13px] font-mono text-slate-700
+                placeholder:text-slate-400
                 focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400
               "
                         />
@@ -137,7 +137,7 @@ function ConfigDialogForm() {
 
                     {/* Client ID */}
                     <div>
-                        <label className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                        <label className="flex items-center gap-1 text-[12px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
                             <KeyRound size={10} />
                             Client ID
                         </label>
@@ -150,14 +150,14 @@ function ConfigDialogForm() {
                                 className="
                   w-full pl-2.5 pr-8 py-1.5 rounded-md
                   border border-slate-200 bg-white
-                  text-xs font-mono text-slate-700
-                  placeholder:text-slate-300
+                  text-[13px] font-mono text-slate-700
+                  placeholder:text-slate-400
                   focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400
                 "
                             />
                             <button
                                 onClick={() => setShowKey((v) => !v)}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
                                 title={
                                     showKey
                                         ? "Hide client ID"
@@ -172,7 +172,7 @@ function ConfigDialogForm() {
                                 )}
                             </button>
                         </div>
-                        <p className="text-[9px] text-slate-400 mt-1 leading-relaxed">
+                        <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
                             To find it, open{" "}
                             <span className="text-slate-500 font-semibold">
                                 Account &amp; Team
@@ -194,7 +194,7 @@ function ConfigDialogForm() {
                                 size={11}
                                 className="text-rose-400 shrink-0 mt-0.5"
                             />
-                            <span className="text-[10px] text-rose-600 break-words min-w-0">
+                            <span className="text-[12px] text-rose-600 break-words min-w-0">
                                 {error}
                             </span>
                         </div>
@@ -207,7 +207,7 @@ function ConfigDialogForm() {
                                 size={11}
                                 className="text-emerald-500 shrink-0"
                             />
-                            <span className="text-[10px] text-emerald-600">
+                            <span className="text-[12px] text-emerald-600">
                                 Connected — {entityCount} entities found
                             </span>
                         </div>
@@ -219,7 +219,7 @@ function ConfigDialogForm() {
                     <button
                         onClick={closeConfigDialog}
                         className="
-              px-3 py-1.5 rounded-md text-xs font-semibold
+              px-3 py-1.5 rounded-md text-[13px] font-semibold
               text-slate-500 hover:text-slate-700 hover:bg-slate-200/60
               transition-colors
             "
@@ -231,7 +231,7 @@ function ConfigDialogForm() {
                         disabled={!canSave || testing}
                         className="
               flex items-center gap-1.5 px-3 py-1.5 rounded-md
-              text-xs font-semibold text-white
+              text-[13px] font-semibold text-white
               bg-gradient-to-r from-blue-500 to-cyan-500
               hover:from-blue-600 hover:to-cyan-600
               disabled:opacity-50 disabled:cursor-not-allowed

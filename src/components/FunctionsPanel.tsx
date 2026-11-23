@@ -183,23 +183,23 @@ function InfoPopover({
             }}
         >
             <div className="flex items-start justify-between mb-1.5">
-                <span className="text-xs font-bold text-slate-700">
+                <span className="text-[13px] font-bold text-slate-700">
                     {meta.label}
                 </span>
                 <button
                     onClick={onClose}
                     className="p-0.5 hover:bg-slate-100 rounded transition-colors shrink-0 ml-2"
                 >
-                    <X size={12} className="text-slate-400" />
+                    <X size={12} className="text-slate-500" />
                 </button>
             </div>
             {meta.description && (
-                <div className="text-[10px] text-slate-500 mb-2">
+                <div className="text-[12px] text-slate-500 mb-2">
                     {meta.description}
                 </div>
             )}
             {meta.details && (
-                <pre className="text-[10px] text-slate-600 bg-slate-50 border border-slate-100 rounded-md p-2 whitespace-pre-wrap font-mono leading-relaxed max-h-48 overflow-y-auto">
+                <pre className="text-[12px] text-slate-600 bg-slate-50 border border-slate-100 rounded-md p-2 whitespace-pre-wrap font-mono leading-relaxed max-h-48 overflow-y-auto">
                     {meta.details}
                 </pre>
             )}
@@ -238,7 +238,7 @@ function InfoButton({ meta }: { meta: FunctionMeta }) {
                     className={
                         showInfo
                             ? "text-indigo-500"
-                            : "text-slate-300 hover:text-indigo-400"
+                            : "text-slate-400 hover:text-indigo-400"
                     }
                 />
             </button>
@@ -283,22 +283,22 @@ function FunctionCard({ meta }: { meta: FunctionMeta }) {
                     >
                         <GripVertical
                             size={10}
-                            className="text-slate-300 group-hover:text-slate-400 shrink-0"
+                            className="text-slate-400 group-hover:text-slate-700 shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                             <div
-                                className={`text-xs font-semibold ${colors.text}`}
+                                className={`text-[13px] font-semibold ${colors.text}`}
                             >
                                 {meta.label}
                             </div>
                             {meta.description && (
-                                <div className="text-[9px] text-slate-400 leading-tight truncate">
+                                <div className="text-[11px] text-slate-500 leading-tight truncate">
                                     {meta.description}
                                 </div>
                             )}
                         </div>
 
-                        <span className="text-[9px] text-slate-400 bg-white/60 px-1 py-0.5 rounded shrink-0">
+                        <span className="text-[11px] text-slate-500 bg-white/60 px-1 py-0.5 rounded shrink-0">
                             {isZeroArg ? "const" : `${argCount}`}
                         </span>
                         {meta.details && <InfoButton meta={meta} />}
@@ -328,12 +328,12 @@ function Section({
         <div>
             <button
                 onClick={() => setOpen(!open)}
-                className="flex items-center gap-1.5 w-full text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 hover:text-slate-700 transition-colors"
+                className="flex items-center gap-1.5 w-full text-left text-[12px] font-semibold text-slate-500 uppercase tracking-wider mb-1 hover:text-slate-700 transition-colors"
             >
                 {open ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
                 <SubcategoryIcon name={iconName} size={10} />
                 <span>{label}</span>
-                <span className="text-slate-300 ml-auto font-normal normal-case">
+                <span className="text-slate-500 ml-auto font-normal normal-case">
                     {functions.length}
                 </span>
             </button>
@@ -358,7 +358,7 @@ function ScenarioPicker() {
 
     return (
         <div className="px-3 py-2 border-b border-slate-200 bg-slate-50/80">
-            <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
                 Scenario
             </div>
             <div className="flex gap-0.5 p-0.5 bg-slate-200/60 rounded-lg">
@@ -372,7 +372,7 @@ function ScenarioPicker() {
                             title={s.description}
                             className={`
                 flex-1 flex items-center justify-center gap-1
-                px-2 py-1.5 rounded-md text-[10px] font-semibold
+                px-2 py-1.5 rounded-md text-[12px] font-semibold
                 transition-all duration-200
                 ${
                     isActive
@@ -414,14 +414,14 @@ export function FunctionsPanel() {
                 <div className="relative">
                     <Search
                         size={12}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500"
                     />
                     <input
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search functions..."
-                        className="w-full pl-7 pr-2 py-1.5 text-xs rounded-md border border-slate-200 bg-slate-50 text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
+                        className="w-full pl-7 pr-2 py-1.5 text-[13px] rounded-md border border-slate-200 bg-slate-50 text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
                     />
                 </div>
             </div>

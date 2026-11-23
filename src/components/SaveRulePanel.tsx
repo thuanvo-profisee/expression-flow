@@ -76,12 +76,12 @@ export function SaveRulePanel() {
         // No overflow-hidden here — the attribute dropdown opens past the card
         <div className="bg-white border border-slate-200 rounded-xl shadow-lg w-[240px]">
             <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100">
-                <Save size={14} className="text-slate-400" />
-                <span className="text-xs font-semibold text-slate-600">
+                <Save size={14} className="text-slate-500" />
+                <span className="text-[13px] font-semibold text-slate-600">
                     Save rule
                 </span>
                 <div className="flex-1" />
-                <span className="text-[9px] font-semibold text-slate-400">
+                <span className="text-[11px] font-semibold text-slate-500">
                     {ruleId ? "Update" : "New"}
                 </span>
             </div>
@@ -90,21 +90,21 @@ export function SaveRulePanel() {
                 <div className="flex items-start gap-1.5 px-3 py-2.5">
                     <Unplug
                         size={11}
-                        className="text-slate-300 shrink-0 mt-0.5"
+                        className="text-slate-400 shrink-0 mt-0.5"
                     />
-                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                    <p className="text-[12px] text-slate-500 leading-relaxed">
                         Select a Profisee entity to save — demo catalogs are
                         local only.
                     </p>
                 </div>
             ) : (
                 <div className="px-3 py-2.5 space-y-2">
-                    <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide">
+                    <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
                         {selectedEntityName} · {clauseKind}
                     </div>
 
                     <div>
-                        <span className="text-[10px] font-medium text-slate-500">
+                        <span className="text-[12px] font-medium text-slate-500">
                             Attribute
                         </span>
                         <div className="mt-0.5">
@@ -128,7 +128,7 @@ export function SaveRulePanel() {
                     </div>
 
                     <label className="block">
-                        <span className="text-[10px] font-medium text-slate-500">
+                        <span className="text-[12px] font-medium text-slate-500">
                             Display text
                         </span>
                         <input
@@ -143,7 +143,7 @@ export function SaveRulePanel() {
                             placeholder={
                                 displayTextFallback || "Shown to data stewards"
                             }
-                            className="mt-0.5 w-full text-[11px] border border-slate-200 rounded-md px-1.5 py-1 text-slate-600 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                            className="mt-0.5 w-full text-[13px] border border-slate-200 rounded-md px-1.5 py-1 text-slate-600 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
                         />
                     </label>
 
@@ -154,7 +154,7 @@ export function SaveRulePanel() {
                             onChange={(e) => setRuleIsEnabled(e.target.checked)}
                             className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-[11px] font-medium text-slate-600">
+                        <span className="text-[13px] font-medium text-slate-600">
                             Enabled
                         </span>
                     </label>
@@ -163,7 +163,7 @@ export function SaveRulePanel() {
                         <button
                             onClick={() => void saveRule()}
                             disabled={saving}
-                            className="flex-1 flex items-center justify-center gap-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-[11px] font-semibold px-2 py-1.5 transition-colors"
+                            className="flex-1 flex items-center justify-center gap-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-[13px] font-semibold px-2 py-1.5 transition-colors"
                         >
                             {saving ? (
                                 <Loader2 size={11} className="animate-spin" />
@@ -180,7 +180,7 @@ export function SaveRulePanel() {
                             <button
                                 onClick={startNewRule}
                                 title="Save as a new rule instead"
-                                className="flex items-center gap-1 rounded-md border border-slate-200 hover:bg-slate-50 text-[10px] font-semibold text-slate-500 px-1.5 py-1.5 transition-colors"
+                                className="flex items-center gap-1 rounded-md border border-slate-200 hover:bg-slate-50 text-[12px] font-semibold text-slate-500 px-1.5 py-1.5 transition-colors"
                             >
                                 <FilePlus2 size={11} />
                                 New
@@ -194,7 +194,7 @@ export function SaveRulePanel() {
                                 size={10}
                                 className="text-rose-400 shrink-0 mt-0.5"
                             />
-                            <span className="text-[9px] text-rose-600 break-words">
+                            <span className="text-[11px] text-rose-600 break-words">
                                 {saveError}
                             </span>
                         </div>
@@ -202,7 +202,7 @@ export function SaveRulePanel() {
                     {!saveError && savedAt && (
                         <div className="flex items-center gap-1.5 rounded-md bg-emerald-50 border border-emerald-200 px-1.5 py-1">
                             <Check size={10} className="text-emerald-500" />
-                            <span className="text-[9px] font-semibold text-emerald-600">
+                            <span className="text-[11px] font-semibold text-emerald-600">
                                 Saved to Profisee
                             </span>
                         </div>

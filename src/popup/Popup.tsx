@@ -79,13 +79,13 @@ function clearDraft(): void {
 }
 
 const labelClass =
-    "flex items-center gap-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wider";
+    "flex items-center gap-1 text-[12px] font-semibold text-slate-500 uppercase tracking-wider";
 
 const inputClass = `
     w-full px-2.5 py-1.5 rounded-md
     border border-slate-200 bg-white
-    text-xs text-slate-700
-    placeholder:text-slate-300
+    text-[13px] text-slate-700
+    placeholder:text-slate-400
     focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400
 `;
 
@@ -227,14 +227,14 @@ export function Popup() {
                     </span>
                     <button
                         onClick={newInstance}
-                        className="ml-auto flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold text-blue-600 hover:bg-blue-50 transition-colors"
+                        className="ml-auto flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[12px] font-semibold text-blue-600 hover:bg-blue-50 transition-colors"
                     >
                         <Plus size={11} />
                         New
                     </button>
                 </div>
                 {instances.length === 0 ? (
-                    <p className="text-[10px] text-slate-400 py-2">
+                    <p className="text-[12px] text-slate-500 py-2">
                         No saved instances yet. Enter one below and test it.
                     </p>
                 ) : (
@@ -256,16 +256,16 @@ export function Popup() {
                                     >
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-1.5">
-                                                <span className="text-xs font-semibold text-slate-700 truncate">
+                                                <span className="text-[13px] font-semibold text-slate-700 truncate">
                                                     {instanceLabel(inst)}
                                                 </span>
                                                 {inUse && (
-                                                    <span className="shrink-0 px-1 rounded text-[9px] font-semibold text-emerald-700 bg-emerald-100">
+                                                    <span className="shrink-0 px-1 rounded text-[11px] font-semibold text-emerald-700 bg-emerald-100">
                                                         In use
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="text-[10px] font-mono text-slate-400 truncate">
+                                            <div className="text-[12px] font-mono text-slate-500 truncate">
                                                 {inst.instanceUrl}
                                             </div>
                                         </div>
@@ -275,8 +275,8 @@ export function Popup() {
                                                 deleteInstance(inst.id);
                                             }}
                                             className={`
-                                                shrink-0 flex items-center gap-1 px-1 py-0.5 rounded text-[10px] font-semibold transition-colors
-                                                ${confirming ? "text-white bg-rose-500 hover:bg-rose-600" : "text-slate-300 hover:text-rose-500"}
+                                                shrink-0 flex items-center gap-1 px-1 py-0.5 rounded text-[12px] font-semibold transition-colors
+                                                ${confirming ? "text-white bg-rose-500 hover:bg-rose-600" : "text-slate-400 hover:text-rose-500"}
                                             `}
                                             title={
                                                 confirming
@@ -297,7 +297,7 @@ export function Popup() {
 
             {/* Selected instance */}
             <div className="p-4 space-y-3" onKeyDown={handleKeyDown}>
-                <div className="text-[11px] font-semibold text-slate-600 border-t border-slate-100 pt-3">
+                <div className="text-[13px] font-semibold text-slate-600 border-t border-slate-100 pt-3">
                     {isSaved ? `Edit ${instanceLabel(form)}` : "New instance"}
                 </div>
 
@@ -349,7 +349,7 @@ export function Popup() {
                         />
                         <button
                             onClick={() => setShowKey((v) => !v)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
                             title={
                                 showKey ? "Hide client ID" : "Show client ID"
                             }
@@ -358,7 +358,7 @@ export function Popup() {
                             {showKey ? <EyeOff size={12} /> : <Eye size={12} />}
                         </button>
                     </div>
-                    <p className="text-[9px] text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
                         Find it in Profisee{" "}
                         <span className="text-slate-500 font-semibold">
                             Administration › Account &amp; Team
@@ -373,7 +373,7 @@ export function Popup() {
                             size={11}
                             className="text-rose-400 shrink-0 mt-0.5"
                         />
-                        <span className="text-[10px] text-rose-600 break-words min-w-0">
+                        <span className="text-[12px] text-rose-600 break-words min-w-0">
                             {error}
                         </span>
                     </div>
@@ -385,7 +385,7 @@ export function Popup() {
                             size={11}
                             className="text-emerald-500 shrink-0"
                         />
-                        <span className="text-[10px] text-emerald-600">
+                        <span className="text-[12px] text-emerald-600">
                             Connected — {tested.entityCount}{" "}
                             {tested.entityCount === 1 ? "entity" : "entities"}{" "}
                             found
@@ -401,7 +401,7 @@ export function Popup() {
                     disabled={!canTest}
                     className="
                         flex items-center gap-1.5 px-3 py-1.5 rounded-md
-                        text-xs font-semibold text-slate-600
+                        text-[13px] font-semibold text-slate-600
                         border border-slate-300 bg-white hover:bg-slate-100
                         disabled:opacity-50 disabled:cursor-not-allowed
                         transition-colors
@@ -421,7 +421,7 @@ export function Popup() {
                     disabled={!canOpen}
                     className="
                         flex items-center gap-1.5 px-3 py-1.5 rounded-md
-                        text-xs font-semibold text-white
+                        text-[13px] font-semibold text-white
                         bg-gradient-to-r from-blue-500 to-cyan-500
                         hover:from-blue-600 hover:to-cyan-600
                         disabled:opacity-50 disabled:cursor-not-allowed

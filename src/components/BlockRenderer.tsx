@@ -260,9 +260,7 @@ function AttributePill({ block }: { block: Block }) {
         return `${parentSegments[0]} › … › ${parentSegments[parentSegments.length - 1]}`;
     }, [parentSegments]);
 
-    const isFocused = useExpressionStore(
-        (s) => s.focusedBlockId === block.id,
-    );
+    const isFocused = useExpressionStore((s) => s.focusedBlockId === block.id);
 
     return (
         <>
@@ -295,7 +293,7 @@ function AttributePill({ block }: { block: Block }) {
                     <Hash size={12} className="text-blue-400 shrink-0" />
                     {isNested ? (
                         <span className="flex flex-col leading-tight">
-                            <span className="text-[9px] text-blue-400 font-normal -mb-0.5">
+                            <span className="text-[11px] text-blue-500 font-normal -mb-0.5">
                                 {breadcrumb}
                             </span>
                             <span>{leafName}</span>
@@ -353,7 +351,7 @@ function AttributePill({ block }: { block: Block }) {
                         <div className="flex items-center gap-1.5 px-2.5 py-2 border-b border-slate-100">
                             <Search
                                 size={12}
-                                className="text-slate-400 shrink-0"
+                                className="text-slate-500 shrink-0"
                             />
                             <input
                                 ref={searchInputRef}
@@ -366,12 +364,12 @@ function AttributePill({ block }: { block: Block }) {
                                 onKeyDown={handleKeyDown}
                                 placeholder="Search attributes..."
                                 className="
-                flex-1 text-xs text-slate-700 bg-transparent
-                placeholder:text-slate-300
+                flex-1 text-[13px] text-slate-700 bg-transparent
+                placeholder:text-slate-400
                 outline-none
               "
                             />
-                            <span className="text-[9px] text-slate-300">
+                            <span className="text-[11px] text-slate-500">
                                 {filtered.length}
                             </span>
                         </div>
@@ -381,7 +379,7 @@ function AttributePill({ block }: { block: Block }) {
                             onWheel={stopWheel}
                         >
                             {filtered.length === 0 ? (
-                                <div className="px-3 py-4 text-xs text-slate-400 text-center">
+                                <div className="px-3 py-4 text-[13px] text-slate-500 text-center">
                                     No attributes found
                                 </div>
                             ) : (
@@ -399,7 +397,7 @@ function AttributePill({ block }: { block: Block }) {
                                         }}
                                         className={`
                     w-full flex items-center gap-2 pr-2.5 py-1.5 text-left
-                    text-xs transition-colors
+                    text-[13px] transition-colors
                     ${idx === highlightIdx ? "bg-blue-50" : "hover:bg-slate-50"}
                     ${attr.value === block.name ? "font-semibold" : ""}
                   `}
@@ -416,7 +414,7 @@ function AttributePill({ block }: { block: Block }) {
                                         <span className="text-slate-700 truncate">
                                             {attr.label}
                                         </span>
-                                        <span className="text-[9px] text-slate-300 ml-auto truncate max-w-[120px]">
+                                        <span className="text-[11px] text-slate-500 ml-auto truncate max-w-[120px]">
                                             {attr.value}
                                         </span>
                                     </button>
@@ -458,7 +456,7 @@ const LITERAL_STYLES: Record<
     },
     null: {
         pill: "bg-slate-100 border border-slate-400 text-slate-500 hover:bg-slate-200",
-        icon: "text-slate-400",
+        icon: "text-slate-500",
         input: "border border-slate-400 text-slate-600 focus:ring-slate-400",
     },
     text: {
@@ -539,9 +537,7 @@ function LiteralPill({ block }: { block: Block }) {
         [commitEdit, block.value],
     );
 
-    const isFocused = useExpressionStore(
-        (s) => s.focusedBlockId === block.id,
-    );
+    const isFocused = useExpressionStore((s) => s.focusedBlockId === block.id);
 
     return (
         <div
@@ -621,9 +617,7 @@ function FunctionBlock({ block }: { block: Block }) {
     const toggleCollapse = useExpressionStore((s) => s.toggleCollapse);
     const addArgSlot = useExpressionStore((s) => s.addArgSlot);
     const removeArgSlot = useExpressionStore((s) => s.removeArgSlot);
-    const isFocused = useExpressionStore(
-        (s) => s.focusedBlockId === block.id,
-    );
+    const isFocused = useExpressionStore((s) => s.focusedBlockId === block.id);
     const meta = FUNCTION_REGISTRY[block.name];
     const colors = getColors(block.name);
     const argLabels =
@@ -653,7 +647,7 @@ function FunctionBlock({ block }: { block: Block }) {
             >
                 <GripVertical
                     size={14}
-                    className="text-slate-400 cursor-grab"
+                    className="text-slate-500 cursor-grab"
                 />
                 <button
                     onClick={() => toggleCollapse(block.id)}
@@ -682,7 +676,7 @@ function FunctionBlock({ block }: { block: Block }) {
                     </>
                 )}
                 {meta?.description && (
-                    <span className="text-xs text-slate-400 ml-1 hidden sm:inline">
+                    <span className="text-[13px] text-slate-500 ml-1 hidden sm:inline">
                         — {meta.description}
                     </span>
                 )}
@@ -697,7 +691,7 @@ function FunctionBlock({ block }: { block: Block }) {
                 >
                     <Copy
                         size={14}
-                        className="text-slate-400 group-hover/cp:text-blue-500"
+                        className="text-slate-500 group-hover/cp:text-blue-500"
                     />
                 </button>
                 <button
@@ -709,7 +703,7 @@ function FunctionBlock({ block }: { block: Block }) {
                 >
                     <X
                         size={14}
-                        className="text-slate-400 group-hover/del:text-red-500"
+                        className="text-slate-500 group-hover/del:text-red-500"
                     />
                 </button>
             </div>
@@ -728,7 +722,7 @@ function FunctionBlock({ block }: { block: Block }) {
                         return (
                             <div key={arg?.id ?? `slot-${block.id}-${index}`}>
                                 <div className="flex items-center gap-1 mb-1">
-                                    <div className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+                                    <div className="text-[13px] font-medium text-slate-500 uppercase tracking-wider">
                                         {isInVariadicRange
                                             ? `Value ${variadicSlotNum}`
                                             : (argLabels[index] ??
@@ -749,7 +743,7 @@ function FunctionBlock({ block }: { block: Block }) {
                                             >
                                                 <Minus
                                                     size={10}
-                                                    className="text-slate-300 group-hover/rm:text-red-500"
+                                                    className="text-slate-400 group-hover/rm:text-red-500"
                                                 />
                                             </button>
                                         )}
@@ -784,7 +778,7 @@ function FunctionBlock({ block }: { block: Block }) {
                             className="
                 flex items-center justify-center gap-1.5
                 py-1.5 rounded-lg border border-dashed border-slate-300
-                text-xs text-slate-400
+                text-[13px] text-slate-500
                 hover:border-slate-400 hover:text-slate-600 hover:bg-white/60
                 transition-all duration-150
               "
@@ -798,7 +792,7 @@ function FunctionBlock({ block }: { block: Block }) {
 
             {/* Collapsed indicator */}
             {block.isCollapsed && (
-                <div className="px-3 py-2 text-xs text-slate-400 italic">
+                <div className="px-3 py-2 text-[13px] text-slate-500 italic">
                     {block.args.filter(Boolean).length} / {block.args.length}{" "}
                     slots filled — click to expand
                 </div>

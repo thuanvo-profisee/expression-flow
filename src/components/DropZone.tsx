@@ -88,7 +88,7 @@ export function DropZone({
           }
         `}
             >
-                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <div className="flex items-center gap-1.5 text-[13px] text-slate-500">
                     <Plus size={14} />
                     <span>Drop {label} here</span>
                     {hasSuggestions && (
@@ -111,7 +111,7 @@ export function DropZone({
                 px-2 py-0.5 rounded-full
                 bg-blue-100 border border-blue-300 text-blue-600
                 hover:bg-blue-200 hover:text-blue-700
-                text-[10px] font-medium
+                text-[12px] font-medium
                 transition-all duration-150
               "
                             title="Paste from clipboard"
@@ -140,7 +140,7 @@ export function DropZone({
                                 handleSuggestionClick(value);
                             }}
                             className="
-                px-2 py-0.5 rounded text-[11px] font-mono
+                px-2 py-0.5 rounded text-[13px] font-mono
                 bg-teal-50 border border-teal-200 text-teal-600
                 hover:border-teal-400 hover:bg-teal-100 hover:text-teal-700
                 transition-all duration-150

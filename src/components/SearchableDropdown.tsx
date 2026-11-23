@@ -113,7 +113,7 @@ export function SearchableDropdown({
                 disabled={disabled}
                 className={`
           w-full flex items-center gap-1.5 px-2 py-1 rounded-md
-          border bg-white text-[11px] font-medium text-slate-700
+          border bg-white text-[13px] font-medium text-slate-700
           transition-all duration-150
           hover:border-blue-300 hover:shadow-sm
           disabled:opacity-60 disabled:cursor-not-allowed
@@ -122,13 +122,13 @@ export function SearchableDropdown({
             >
                 {icon}
                 <span
-                    className={`truncate ${selectedLabel ? "" : "text-slate-300"}`}
+                    className={`truncate ${selectedLabel ? "" : "text-slate-500"}`}
                 >
                     {selectedLabel ?? placeholder}
                 </span>
                 <ChevronDown
                     size={12}
-                    className={`text-slate-400 ml-auto shrink-0 transition-transform duration-150 ${
+                    className={`text-slate-500 ml-auto shrink-0 transition-transform duration-150 ${
                         isOpen ? "rotate-180" : ""
                     }`}
                 />
@@ -147,7 +147,7 @@ export function SearchableDropdown({
                 >
                     {/* Search input */}
                     <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-slate-100">
-                        <Search size={11} className="text-slate-400 shrink-0" />
+                        <Search size={11} className="text-slate-500 shrink-0" />
                         <input
                             ref={searchInputRef}
                             type="text"
@@ -159,11 +159,11 @@ export function SearchableDropdown({
                             onKeyDown={handleKeyDown}
                             placeholder={searchPlaceholder}
                             className="
-                flex-1 min-w-0 text-[11px] text-slate-700 bg-transparent
-                placeholder:text-slate-300 outline-none
+                flex-1 min-w-0 text-[13px] text-slate-700 bg-transparent
+                placeholder:text-slate-400 outline-none
               "
                         />
-                        <span className="text-[9px] text-slate-300">
+                        <span className="text-[11px] text-slate-500">
                             {filtered.length}
                         </span>
                     </div>
@@ -171,7 +171,7 @@ export function SearchableDropdown({
                     {/* Results */}
                     <div className="flex-1 overflow-y-auto">
                         {filtered.length === 0 ? (
-                            <div className="px-2.5 py-3 text-[11px] text-slate-400 text-center">
+                            <div className="px-2.5 py-3 text-[13px] text-slate-500 text-center">
                                 {emptyLabel}
                             </div>
                         ) : (
@@ -184,7 +184,7 @@ export function SearchableDropdown({
                                     title={opt.label}
                                     className={`
                     w-full flex items-center gap-1.5 px-2 py-1 text-left
-                    text-[11px] transition-colors
+                    text-[13px] transition-colors
                     ${idx === highlightIdx ? "bg-blue-50" : "hover:bg-slate-50"}
                     ${opt.value === value ? "font-semibold text-slate-700" : "text-slate-600"}
                   `}
