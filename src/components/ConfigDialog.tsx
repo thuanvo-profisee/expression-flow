@@ -13,6 +13,8 @@ import {
 import { useExpressionStore } from "../store";
 import { loadStoredConfig, normalizeInstanceUrl } from "../api/config";
 import { testConnection } from "../api/profisee";
+import { requestHostAccess } from "../api/extension";
+import { rememberConnection } from "../api/instances";
 
 /**
  * Connection settings popup — asks for the Profisee instance URL and
@@ -58,8 +60,10 @@ function ConfigDialogForm() {
         setError(null);
         setEntityCount(null);
         try {
+            await requestHostAccess(cfg.instanceUrl);
             const count = await testConnection(cfg);
             setEntityCount(count);
+            rememberConnection(cfg);
             // Brief success flash before closing
             setTimeout(() => saveConnectionConfig(cfg), 400);
         } catch (e) {

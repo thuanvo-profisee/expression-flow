@@ -1,12 +1,14 @@
 name: CI
 
 # Runs on every PR into main (and on main itself after merge) so the
-# build + test status is available as a required check before merging.
+# lint + test + build status is available as a required check before merging.
+# A version tag (v1.2.3) also publishes the Chrome extension as a GitHub release.
 on:
   pull_request:
     branches: [main]
   push:
     branches: [main]
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
 
 # A new push to a PR cancels the previous, still-running check.
 concurrency:
@@ -28,9 +30,57 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The release must ship the version it is tagged with
+      - name: Check tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+
+      - name: Lint
+        run: npm run lint
+
       - name: Test
         run: npm test
 
       # `npm run build` is `tsc -b && vite build`, so this type-checks too.
       - name: Build
         run: npm run build
+
+      # Manifest version comes from package.json
+      - name: Build Chrome extension
+        run: npx vite build --mode extension
+
+      - name: Package Chrome extension
+        run: cd dist-extension && zip -r ../expression-flow-extension.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: expression-flow-extension
+          path: expression-flow-extension.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: build-and-test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: expression-flow-extension
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" expression-flow-extension.zip \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "Expression Flow $GITHUB_REF_NAME" \
+            --generate-notes

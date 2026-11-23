@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "minimum_chrome_version": "116",
+  "name": "Expression Flow",
+  "description": "Build Profisee business rules visually — drag blocks instead of writing expression syntax.",
+  "version": "1.0.0",
+  "icons": {
+    "16": "logo.png",
+    "32": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  },
+  "action": {
+    "default_title": "Open Expression Flow",
+    "default_icon": "logo.png",
+    "default_popup": "popup.html"
+  },
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ]
+}

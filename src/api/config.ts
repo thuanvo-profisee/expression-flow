@@ -49,3 +49,19 @@ export function saveStoredConfig(cfg: ProfiseeConfig): void {
 export function clearStoredConfig(): void {
     localStorage.removeItem(STORAGE_KEY);
 }
+
+/**
+ * Call `onChange` when another page of the same origin (e.g. the
+ * extension popup) saves a new config. Returns an unsubscribe function.
+ */
+export function subscribeStoredConfig(
+    onChange: (cfg: ProfiseeConfig) => void,
+): () => void {
+    const handler = (e: StorageEvent) => {
+        if (e.key !== STORAGE_KEY) return;
+        const cfg = loadStoredConfig();
+        if (cfg) onChange(cfg);
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+}
