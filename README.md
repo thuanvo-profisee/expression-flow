@@ -170,7 +170,11 @@ The extension version is the `version` in `package.json`.
 
 ### Publish a release
 
-On an up-to-date `main`, run:
+1. Write the release description in `.github/release-notes/v<version>.md`
+   (copy the last one). For pictures, use
+   `https://raw.githubusercontent.com/{{REPO}}/{{TAG}}/docs/images/<file>.png`;
+   CI fills in `{{REPO}}` and `{{TAG}}`. CI adds the list of changes below it.
+2. On an up-to-date `main`, run:
 
 ```bash
 npm version patch          # or minor / major: updates package.json, commits, tags v1.0.1
@@ -179,3 +183,6 @@ git push --follow-tags     # pushes the commit and the tag
 
 The release starts when the tag reaches GitHub. Tags must look like `v1.2.3`, and
 CI stops if the tag does not match the `package.json` version.
+
+To correct the description of the current release, edit its notes file and push
+to `main`. CI updates the release that matches the `package.json` version.
